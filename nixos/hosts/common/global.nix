@@ -84,10 +84,9 @@
     # Authentication configuration - using SOPS secrets
     hashedPasswordFile = config.sops.secrets."ellen/hashedPassword".path;
 
-    # SSH public key access - using SOPS secrets  
-    openssh.authorizedKeys.keyFiles = [
-      config.sops.secrets."ellen/sshKeys".path
-    ];
+    # SSH public key access - using SOPS secrets
+    # Note: keyFiles expects files to exist at evaluation time
+    # We'll handle SSH keys via the sshd service configuration instead
   };
 
   # SSH service configuration
@@ -103,6 +102,28 @@
     };
 
     ports = [ 22 ];
+  };
+
+  # SSH key deployment via systemd service (load-order safe)
+  systemd.services.deploy-ellen-ssh-keys = {
+    description = "Deploy Ellen's SSH keys from SOPS";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "sops-nix.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = ''
+      # Create Ellen's .ssh directory
+      mkdir -p /home/ellen/.ssh
+      chown ellen:users /home/ellen/.ssh
+      chmod 700 /home/ellen/.ssh
+
+      # Copy SSH keys from SOPS secret
+      cp ${config.sops.secrets."ellen/sshKeys".path} /home/ellen/.ssh/authorized_keys
+      chown ellen:users /home/ellen/.ssh/authorized_keys
+      chmod 600 /home/ellen/.ssh/authorized_keys
+    '';
   };
 
   # System security configuration
