@@ -21,8 +21,9 @@
     secrets = {
       # Ellen's password hash
       "ellen/hashedPassword" = {
+        # CRITICAL: This must be available before user creation
+        neededForUsers = true;
         # Make this available to the user configuration
-        # Path will be /run/secrets/ellen-hashedPassword
         name = "ellen-hashedPassword";
         # Only root can read password hashes
         owner = "root";
