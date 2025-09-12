@@ -17,15 +17,13 @@ NERV is a modern infrastructure platform that combines NixOS's declarative confi
 
 **Phase 1: Foundation** ✅
 - [x] NixOS flake structure with modular architecture
-- [x] Global configuration for all cluster nodes
+- [x] Global configuration for all cluster nodes  
 - [x] Hardware-specific node configurations (Misato)
 - [x] Declarative disk management with Btrfs subvolumes
 - [x] Production-ready security and power management
-
-**Next Phase: Deployment**
-- [ ] SOPS secret management integration
-- [ ] NixOS-Anywhere deployment pipeline
-- [ ] SSH key management and authentication
+- [x] SOPS secret management with proper boot order
+- [x] NixOS-Anywhere deployment pipeline with age key handling
+- [x] Complete authentication (SSH keys + passwords)
 
 **Future Phases**
 - [ ] Core Kubernetes cluster setup
@@ -60,7 +58,8 @@ Ready to deploy? See **[DEPLOYMENT.md](DEPLOYMENT.md)** for complete deployment 
 - Age private key available (`~/.config/sops/age/keys.txt`)
 - Configuration validated (`nix flake check`)
 - Network connectivity to target
-- Ready to deploy: `nixos-anywhere --flake .#misato root@<ip>`
+- Age key prepared: `mkdir -p /tmp/secrets/var/lib/sops-nix && cp ~/.config/sops/age/keys.txt /tmp/secrets/var/lib/sops-nix/key.txt`
+- **Deploy**: `nixos-anywhere --extra-files /tmp/secrets --flake .#<node> root@<ip>`
 
 ---
 

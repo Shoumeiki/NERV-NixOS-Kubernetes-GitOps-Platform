@@ -69,17 +69,26 @@ This guide covers deploying NERV nodes to real hardware using nixos-anywhere wit
 
 ### Step 3: Deploy to Target
 
-1. **Deploy with nixos-anywhere**:
+1. **Prepare age key for deployment**:
    ```bash
-   nixos-anywhere --flake .#misato root@<TARGET_IP>
+   # Create the secrets directory structure for nixos-anywhere
+   mkdir -p /tmp/secrets/var/lib/sops-nix
+   cp ~/.config/sops/age/keys.txt /tmp/secrets/var/lib/sops-nix/key.txt
+   chmod 600 /tmp/secrets/var/lib/sops-nix/key.txt
+   ```
+
+2. **Deploy with nixos-anywhere**:
+   ```bash
+   nixos-anywhere --extra-files /tmp/secrets --flake .#misato root@<TARGET_IP>
    ```
 
    This command will:
    - Connect to the target machine via SSH
    - Partition and format disks according to `disko.nix`
+   - Copy your age private key to `/var/lib/sops-nix/key.txt`
    - Install NixOS with your configuration
-   - Copy the age private key for secret decryption
-   - Reboot into the new system
+   - Decrypt SOPS secrets during user creation (thanks to `neededForUsers = true`)
+   - Reboot into the new system with working authentication
 
 ### Step 4: Verify Deployment
 
@@ -123,6 +132,18 @@ This guide covers deploying NERV nodes to real hardware using nixos-anywhere wit
    # Ensure key exists and is readable
    ls -la ~/.config/sops/age/keys.txt
    chmod 600 ~/.config/sops/age/keys.txt
+   
+   # Ensure you're using --extra-files with correct structure
+   mkdir -p /tmp/secrets/var/lib/sops-nix
+   cp ~/.config/sops/age/keys.txt /tmp/secrets/var/lib/sops-nix/key.txt
+   nixos-anywhere --extra-files /tmp/secrets --flake .#misato root@<TARGET_IP>
+   ```
+
+2. **Password authentication fails but SSH keys work**:
+   ```bash
+   # This means SOPS secrets need neededForUsers = true
+   # Check your secrets.nix configuration includes:
+   # secrets."user/password".neededForUsers = true;
    ```
 
 2. **SSH connection refused after deployment**:
