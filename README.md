@@ -13,16 +13,39 @@ NERV is a modern infrastructure platform that combines NixOS's declarative confi
 - **Energy efficient** design principles
 - **Modular architecture** for easy maintenance
 
-## Roadmap
+## Current Status
 
-- [ ] Basic NixOS flake structure
-- [ ] NixOS-Anywhere deployment pipeline
+**Phase 1: Foundation** ✅
+- [x] NixOS flake structure with modular architecture
+- [x] Global configuration for all cluster nodes
+- [x] Hardware-specific node configurations (Misato)
+- [x] Declarative disk management with Btrfs subvolumes
+- [x] Production-ready security and power management
+
+**Next Phase: Deployment**
 - [ ] SOPS secret management integration
+- [ ] NixOS-Anywhere deployment pipeline
+- [ ] SSH key management and authentication
+
+**Future Phases**
 - [ ] Core Kubernetes cluster setup
 - [ ] GitOps workflow implementation
 - [ ] Advanced services deployment
 - [ ] Monitoring and observability
 - [ ] High availability configuration
+
+## Quick Start
+
+```bash
+# Validate configuration
+nix flake check
+
+# Test build locally
+nixos-rebuild build --flake .#misato
+
+# Deploy to remote host (when ready)
+nixos-anywhere --flake .#misato root@<target-ip>
+```
 
 ---
 

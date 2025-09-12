@@ -1,47 +1,50 @@
 # hosts/common/global.nix
-# Global configuration shared by all NERV hosts
-# This file contains settings that every node needs regardless of its role
+# NERV Cluster - Global Configuration
+#
+# Shared configuration applied to all nodes in the NERV cluster.
+# These settings ensure consistency and provide baseline functionality
+# that every node requires regardless of its specific role.
 
 { config, pkgs, lib, ... }:
 
 {
-  # System basics
-  system.stateVersion = "25.05"; # Don't change this after initial install
+  # NixOS release compatibility - don't change after initial deployment
+  system.stateVersion = "25.05";
 
-  # Boot configuration
+  # Boot and system initialization
   boot = {
-    # Use systemd-boot for UEFI systems (modern and simple)
+    # UEFI boot configuration for modern hardware
     loader = {
       systemd-boot.enable = true;
       efi.canTouchEfiVariables = true;
     };
 
-    # Enable support for NTFS (useful for USB drives, etc.)
-    supportedFilesystems = [ "ntfs" ];
+    # Filesystem support for various storage devices
+    supportedFilesystems = [ "ntfs" "btrfs" ];
   };
 
-  # Networking fundamentals
+  # Network configuration and security
   networking = {
-    # We'll set hostnames per-host, but configure DNS here
-    nameservers = [ "1.1.1.1" "8.8.8.8" ];  # Cloudflare + Google DNS
+    # DNS servers for reliable name resolution
+    nameservers = [ "1.1.1.1" "8.8.8.8" ];
 
-    # Enable NetworkManager for easier network management
+    # Network management for headless operation
     networkmanager.enable = true;
 
-    # Basic firewall - we'll open specific ports per host as needed
+    # Basic firewall with diagnostic access
     firewall = {
       enable = true;
-      allowPing = true;  # Allow ping for network diagnostics
+      allowPing = true;
     };
   };
 
-  # Time and localisation
-  time.timeZone = "Australia/Melbourne";  # Adjust to your timezone
-  i18n.defaultLocale = "en_AU.UTF-8";     # Australian English
+  # Localization and time settings
+  time.timeZone = "Australia/Melbourne";
+  i18n.defaultLocale = "en_AU.UTF-8";
 
-  # Essential system packages available on all hosts
+  # Essential system packages for all nodes
   environment.systemPackages = with pkgs; [
-    # System administration
+    # System monitoring and administration
     htop
     btop
     tree
@@ -49,103 +52,97 @@
     wget
     rsync
 
-    # Network diagnostics
+    # Network diagnostics and troubleshooting
     dig
     nmap
     traceroute
 
-    # File management
+    # File management and search
     fd
     ripgrep
     eza
 
-    # Text editing
+    # Text editing for configuration management
     neovim
   ];
 
-  # Ellen - our administrative user across all hosts
+  # Administrative user configuration
   users.users.ellen = {
     isNormalUser = true;
     description = "Ellen - NERV Operations Director";
 
-    # Administrative groups
+    # Administrative privileges
     extraGroups = [
-      "wheel"         # sudo access
-      "networkmanager" # network configuration
-      "systemd-journal" # log access
+      "wheel"           # Sudo access for system administration
+      "networkmanager"  # Network configuration access
+      "systemd-journal" # System log access
     ];
 
-    # For now, we'll use password authentication
+    # Authentication configuration
     # TODO: Replace with SSH key authentication via secrets management
     hashedPassword = "$6$rounds=500000$your-hashed-password-here";
 
-    # Enable SSH access
+    # SSH public key access (managed via secrets)
     openssh.authorizedKeys.keys = [
       # TODO: Add Ellen's SSH public keys here
     ];
   };
 
-  # SSH configuration
+  # SSH service configuration
   services.openssh = {
     enable = true;
 
-    # Security hardening
+    # Security hardening settings
     settings = {
-      PasswordAuthentication = true; # TODO: Disable once SSH keys working
+      PasswordAuthentication = true;  # TODO: Disable once SSH keys working
       PermitRootLogin = "no";
       X11Forwarding = false;
-
-      # Only allow Ellen to SSH in
       AllowUsers = [ "ellen" ];
     };
 
-    # Listen on standard port
     ports = [ 22 ];
   };
 
-  # System security hardening
+  # System security configuration
   security = {
-    # Enable sudo for wheel group members
+    # Sudo configuration for administrative access
     sudo = {
       enable = true;
-      wheelNeedsPassword = true;  # Require password for sudo
+      wheelNeedsPassword = true;
     };
 
-    # Additional kernel hardening
-    kernelModules = [ ];  # Blacklist unnecessary modules if needed
+    # Kernel security modules (customize as needed)
+    kernelModules = [ ];
   };
 
-  # System services that every host needs
+  # Core system services
   services = {
-    # Network time synchronisation
+    # Network time synchronization for cluster coordination
     timesyncd.enable = true;
 
-    # Automatic system updates (conservative approach)
-    # TODO: Consider if we want this for production
+    # System log management
+    journald.extraConfig = ''
+      SystemMaxUse=500M
+      SystemMaxFiles=5
+    '';
+
+    # TODO: Consider automatic updates for production
     # system-update.enable = true;
   };
 
-  # Nix configuration
+  # Nix package manager configuration
   nix = {
-    # Enable flakes system-wide
+    # Enable flakes and modern Nix commands
     settings = {
       experimental-features = [ "nix-command" "flakes" ];
-
-      # Optimise storage by hard-linking identical files
       auto-optimise-store = true;
     };
 
-    # Automatic garbage collection to save disk space
+    # Automated maintenance to prevent disk space issues
     gc = {
       automatic = true;
       dates = "weekly";
       options = "--delete-older-than 30d";
     };
   };
-
-  # System monitoring and logging
-  services.journald.extraConfig = ''
-    SystemMaxUse=500M
-    SystemMaxFiles=5
-  '';
 }
