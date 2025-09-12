@@ -82,11 +82,11 @@
     ];
 
     # Authentication configuration - using SOPS secrets
-    hashedPasswordFile = config.sops.secrets."ellen-hashedPassword".path;
+    hashedPasswordFile = config.sops.secrets."ellen/hashedPassword".path;
 
     # SSH public key access - using SOPS secrets  
     openssh.authorizedKeys.keyFiles = [
-      config.sops.secrets."ellen-sshKeys".path
+      config.sops.secrets."ellen/sshKeys".path
     ];
   };
 
