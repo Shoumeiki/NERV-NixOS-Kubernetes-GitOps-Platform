@@ -24,7 +24,6 @@
 
     # Disable wireless capabilities for power efficiency
     wireless.enable = false;
-    networkmanager.wifi.enable = false;
   };
 
   # Boot and kernel configuration

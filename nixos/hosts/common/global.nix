@@ -80,7 +80,7 @@
 
     # Authentication configuration
     # TODO: Replace with SSH key authentication via secrets management
-    hashedPassword = "$6$rounds=500000$your-hashed-password-here";
+    hashedPassword = "replace";
 
     # SSH public key access (managed via secrets)
     openssh.authorizedKeys.keys = [
@@ -110,9 +110,6 @@
       enable = true;
       wheelNeedsPassword = true;
     };
-
-    # Kernel security modules (customize as needed)
-    kernelModules = [ ];
   };
 
   # Core system services
