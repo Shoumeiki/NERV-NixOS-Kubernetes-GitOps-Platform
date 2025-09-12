@@ -13,8 +13,8 @@
     # Default secret file location (relative to flake root)
     defaultSopsFile = ../../secrets/secrets.yaml;
     
-    # Where to place the age private key on deployed systems
-    # This will be handled by nixos-anywhere during deployment
+    # Where to find the age private key on deployed systems
+    # This must match where nixos-anywhere places the key
     age.keyFile = "/var/lib/sops-nix/key.txt";
     
     # Define which secrets to extract and where to place them

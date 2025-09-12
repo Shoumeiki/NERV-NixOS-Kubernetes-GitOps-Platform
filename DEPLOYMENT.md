@@ -10,7 +10,7 @@ This guide covers deploying NERV nodes to real hardware using nixos-anywhere wit
    ```bash
    # Install nixos-anywhere (if not in nix develop shell)
    nix profile install github:nix-community/nixos-anywhere
-   
+
    # Ensure age and sops are available
    nix profile install nixpkgs#age nixpkgs#sops
    ```
@@ -53,7 +53,7 @@ This guide covers deploying NERV nodes to real hardware using nixos-anywhere wit
    ```bash
    # Verify your age key exists (created during setup)
    ls -la ~/.config/sops/age/keys.txt
-   
+
    # Test decryption works
    sops -d secrets/secrets.yaml
    ```
@@ -62,7 +62,7 @@ This guide covers deploying NERV nodes to real hardware using nixos-anywhere wit
    ```bash
    # Check flake validity
    nix flake check
-   
+
    # Test build (optional but recommended)
    nixos-rebuild build --flake .#misato
    ```
@@ -89,7 +89,7 @@ This guide covers deploying NERV nodes to real hardware using nixos-anywhere wit
    ```bash
    # Test SSH key authentication
    ssh ellen@<TARGET_IP>
-   
+
    # If SSH keys aren't working yet, password should work
    # Password is the one you encrypted in secrets.yaml
    ```
@@ -105,11 +105,11 @@ This guide covers deploying NERV nodes to real hardware using nixos-anywhere wit
    ```bash
    # Check system status
    systemctl status
-   
+
    # Verify disk layout
    df -h
    lsblk
-   
+
    # Check services
    systemctl status sshd
    ```
