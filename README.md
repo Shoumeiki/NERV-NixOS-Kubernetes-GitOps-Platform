@@ -40,12 +40,27 @@ NERV is a modern infrastructure platform that combines NixOS's declarative confi
 # Validate configuration
 nix flake check
 
-# Test build locally
+# Test build locally  
 nixos-rebuild build --flake .#misato
 
-# Deploy to remote host (when ready)
+# Deploy to remote host
 nixos-anywhere --flake .#misato root@<target-ip>
 ```
+
+## Deployment
+
+Ready to deploy? See **[DEPLOYMENT.md](DEPLOYMENT.md)** for complete deployment instructions including:
+- Hardware preparation and requirements
+- Secret management with SOPS
+- Step-by-step nixos-anywhere deployment
+- Troubleshooting and recovery procedures
+
+**Quick deployment checklist**:
+- ✅ Target hardware booted from NixOS ISO
+- ✅ Age private key available (`~/.config/sops/age/keys.txt`)
+- ✅ Configuration validated (`nix flake check`)
+- ✅ Network connectivity to target
+- 🚀 Ready to deploy: `nixos-anywhere --flake .#misato root@<ip>`
 
 ---
 

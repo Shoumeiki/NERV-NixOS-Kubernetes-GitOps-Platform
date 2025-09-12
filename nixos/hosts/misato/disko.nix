@@ -13,7 +13,7 @@
     disk = {
       main = {
         type = "disk";
-        device = "/dev/nvme0n1";
+        device = "/dev/sda";  # Updated for actual hardware
         content = {
           type = "gpt";
           partitions = {
