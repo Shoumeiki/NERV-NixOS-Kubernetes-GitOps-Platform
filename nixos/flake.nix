@@ -21,10 +21,14 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # TODO: Add sops-nix for secret management when ready
+    # Secret management with age encryption
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, disko, ... }@inputs:
+  outputs = { self, nixpkgs, disko, sops-nix, ... }@inputs:
   let
     # Target architecture for all NERV cluster nodes
     system = "x86_64-linux";
@@ -46,6 +50,7 @@
           ./hosts/common/global.nix    # Shared configuration for all nodes
           ./hosts/${nodeName}          # Node-specific configuration
           disko.nixosModules.disko     # Automated disk partitioning
+          sops-nix.nixosModules.sops   # Secret management
         ];
       };
     };

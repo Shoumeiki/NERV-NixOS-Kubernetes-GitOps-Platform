@@ -8,6 +8,9 @@
 { config, pkgs, lib, ... }:
 
 {
+  imports = [
+    ./secrets.nix
+  ];
   # NixOS release compatibility - don't change after initial deployment
   system.stateVersion = "25.05";
 
@@ -78,13 +81,12 @@
       "systemd-journal" # System log access
     ];
 
-    # Authentication configuration
-    # TODO: Replace with SSH key authentication via secrets management
-    hashedPassword = "replace";
+    # Authentication configuration - using SOPS secrets
+    hashedPasswordFile = config.sops.secrets."ellen-hashedPassword".path;
 
-    # SSH public key access (managed via secrets)
-    openssh.authorizedKeys.keys = [
-      # TODO: Add Ellen's SSH public keys here
+    # SSH public key access - using SOPS secrets  
+    openssh.authorizedKeys.keyFiles = [
+      config.sops.secrets."ellen-sshKeys".path
     ];
   };
 
