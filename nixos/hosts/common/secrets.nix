@@ -31,9 +31,9 @@
       };
       
       # Ellen's SSH keys
-      "ellen/sshKeys" = {
+      "ellen/sshKey" = {
         # Make this available to the SSH configuration
-        name = "ellen-sshKeys";
+        name = "ellen-sshKey";
         # SSH service needs to read this
         owner = "root";
         group = "root";

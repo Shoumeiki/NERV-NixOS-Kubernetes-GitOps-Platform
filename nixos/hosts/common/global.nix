@@ -120,7 +120,7 @@
       chmod 700 /home/ellen/.ssh
 
       # Copy SSH keys from SOPS secret
-      cp ${config.sops.secrets."ellen/sshKeys".path} /home/ellen/.ssh/authorized_keys
+      cp ${config.sops.secrets."ellen/sshKey".path} /home/ellen/.ssh/authorized_keys
       chown ellen:users /home/ellen/.ssh/authorized_keys
       chmod 600 /home/ellen/.ssh/authorized_keys
     '';
