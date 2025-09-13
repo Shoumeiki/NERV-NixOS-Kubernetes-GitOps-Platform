@@ -74,6 +74,7 @@
       enable = true;
       role = "server";  # This node is a control plane
       clusterInit = true;  # Initialize new cluster
+      tokenFile = config.sops.secrets."k3s/token".path;
     };
 
     # Disable desktop services

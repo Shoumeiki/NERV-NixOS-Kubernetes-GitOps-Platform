@@ -23,6 +23,13 @@
         group = "root";
         mode = "0444";
       };
+
+      "k3s/token" = {
+        name = "k3s-token";
+        owner = "root";
+        group = "root";
+        mode = "0400";
+      };
     };
   };
 }
