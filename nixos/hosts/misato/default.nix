@@ -76,6 +76,19 @@
       clusterInit = true;  # Initialize new cluster
       tokenFile = config.sops.secrets."k3s/token".path;
     };
+  };
+
+  # Automatically set up kubectl access for Ellen
+  systemd.services.setup-ellen-kubeconfig = {
+    description = "Setup kubectl access for Ellen";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "k3s.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = "${pkgs.bash}/bin/bash ${../common/scripts/setup-kubeconfig.sh}";
+    };
+  };
 
     # Disable desktop services
     xserver.enable = false;
