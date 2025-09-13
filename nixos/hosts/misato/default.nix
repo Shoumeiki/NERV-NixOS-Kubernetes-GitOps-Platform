@@ -99,6 +99,18 @@
       };
     };
 
+    # Bootstrap ArgoCD automatically
+    services.bootstrap-argocd = {
+      description = "Bootstrap ArgoCD GitOps controller";
+      wantedBy = [ "multi-user.target" ];
+      after = [ "k3s.service" "setup-ellen-kubeconfig.service" ];
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        ExecStart = "${pkgs.bash}/bin/bash ${../common/scripts/bootstrap-argocd.sh}";
+      };
+    };
+
     # No sleep for servers
     sleep.extraConfig = ''
       AllowSuspend=no
