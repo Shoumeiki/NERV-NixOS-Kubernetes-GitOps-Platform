@@ -1,99 +1,82 @@
 # hosts/misato/default.nix
-# NERV Node - Misato Configuration
-#
-# Hardware-specific configuration for Misato (Intel N150 Mini PC)
-# Optimized for 24/7 headless operation as a Kubernetes cluster node
-# with focus on energy efficiency and reliable performance.
+# Misato node configuration (Intel N150 Mini PC)
 
 { config, pkgs, lib, ... }:
 
 {
   imports = [
-    # Declarative disk configuration
     ./disko.nix
-    # Hardware scan results will be added here after initial deployment
-    # ./hardware-configuration.nix
+    # ./hardware-configuration.nix  # Added after deployment
   ];
 
-  # Network configuration
   networking = {
     hostName = "misato";
-
-    # DHCP configuration for initial setup
     useDHCP = lib.mkDefault true;
-
-    # Disable wireless capabilities for power efficiency
-    wireless.enable = false;
+    wireless.enable = false;  # Wired connection only
   };
 
-  # Boot and kernel configuration
   boot = {
-    # Storage device drivers for Intel N150 hardware
     initrd = {
       availableKernelModules = [
-        "xhci_pci"      # USB 3.0 controller support
-        "ahci"          # SATA controller support
-        "nvme"          # NVMe storage support
-        "usb_storage"   # USB storage devices
-        "sd_mod"        # SD card reader support
+        "xhci_pci"      # USB 3.0
+        "ahci"          # SATA
+        "nvme"          # NVMe storage
+        "usb_storage"
+        "sd_mod"        # SD card reader
       ];
       kernelModules = [ ];
     };
 
-    # Virtualization and container support
-    kernelModules = [ "kvm-intel" ];
+    kernelModules = [ "kvm-intel" ];  # Virtualization support
     extraModulePackages = [ ];
 
-    # Intel N150 hardware optimization
     kernelParams = [
-      "i915.enable_guc=2"  # Enable Intel GPU GuC/HuC firmware
-      # "mitigations=off"  # Uncomment for better performance if security allows
+      "i915.enable_guc=2"  # Intel GPU firmware
+      # "mitigations=off"  # Uncomment for performance over security
     ];
 
-    # System tuning for server workloads
+    # Server tuning
     kernel.sysctl = {
-      "fs.file-max" = 2097152;          # Increased file descriptor limits
-      "net.core.rmem_max" = 134217728;  # Network buffer optimization
+      "fs.file-max" = 2097152;          # Higher file descriptor limit
+      "net.core.rmem_max" = 134217728;  # Network buffer tuning
       "net.core.wmem_max" = 134217728;
     };
   };
 
-  # Hardware acceleration and graphics
   hardware = {
-    # Intel graphics acceleration for compute workloads
+    # Intel graphics for compute workloads
     graphics = {
       enable = true;
       enable32Bit = true;
-
-      # Intel GPU drivers and compute runtime
       extraPackages = with pkgs; [
-        intel-media-driver    # Modern Intel GPU driver
-        libvdpau-va-gl        # VDPAU via VA-API support
-        intel-compute-runtime # OpenCL runtime for AI/compute
-        level-zero            # Intel GPU compute API
+        intel-media-driver    # Intel GPU driver
+        libvdpau-va-gl
+        intel-compute-runtime # OpenCL support
+        level-zero            # Intel compute API
       ];
     };
 
-    # CPU microcode and firmware
     cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
     enableRedistributableFirmware = true;
-
-    # Disable unused hardware for power savings
-    bluetooth.enable = false;
+    bluetooth.enable = false;  # Power saving
   };
 
-  # Power management for 24/7 operation
   powerManagement = {
     enable = true;
     cpuFreqGovernor = lib.mkDefault "powersave";
   };
 
-  # System services configuration
   services = {
-    # Intel thermal management
-    thermald.enable = true;
+    thermald.enable = true;  # Intel thermal management
 
-    # Disable desktop-oriented services
+    # K3s Kubernetes cluster
+    k3s = {
+      enable = true;
+      role = "server";  # This node is a control plane
+      clusterInit = true;  # Initialize new cluster
+    };
+
+    # Disable desktop services
     xserver.enable = false;
     printing.enable = false;
     pipewire.enable = false;
@@ -102,15 +85,14 @@
     power-profiles-daemon.enable = false;
   };
 
-  # System daemon optimization
   systemd = {
-    # Disable sleep states for server operation
+    # No sleep for servers
     sleep.extraConfig = ''
       AllowSuspend=no
       AllowHibernation=no
     '';
 
-    # Faster boot and shutdown times
+    # Faster timeouts
     extraConfig = ''
       DefaultTimeoutStopSec=30s
       DefaultTimeoutStartSec=30s

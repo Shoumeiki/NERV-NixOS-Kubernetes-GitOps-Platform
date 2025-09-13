@@ -82,13 +82,13 @@ This guide covers deploying NERV nodes to real hardware using nixos-anywhere wit
    nixos-anywhere --extra-files /tmp/secrets --flake .#misato root@<TARGET_IP>
    ```
 
-   This command will:
-   - Connect to the target machine via SSH
-   - Partition and format disks according to `disko.nix`
-   - Copy your age private key to `/var/lib/sops-nix/key.txt`
+   This will:
+   - Connect to target via SSH
+   - Partition and format disks per `disko.nix`
+   - Copy age key to `/var/lib/sops-nix/key.txt`
    - Install NixOS with your configuration
-   - Decrypt SOPS secrets during user creation (thanks to `neededForUsers = true`)
-   - Reboot into the new system with working authentication
+   - Decrypt SOPS secrets for user creation
+   - Reboot into the new system
 
 ### Step 4: Verify Deployment
 
@@ -159,7 +159,7 @@ This guide covers deploying NERV nodes to real hardware using nixos-anywhere wit
    ```
 
 4. **Disk partitioning issues**:
-   - Ensure target disk is `/dev/nvme0n1` or update `disko.nix`
+   - Disk auto-detection failed - check `disko.nix` device path
    - Check for existing partitions that might interfere
 
 ### Recovery
@@ -174,18 +174,10 @@ If deployment fails, you can:
 
 ## Security Notes
 
-- **Private keys**: Never commit your age private key to git
-- **SSH access**: After successful deployment, consider disabling password auth
-- **Network**: Deploy on trusted networks or use VPN access
-
-## Next Steps
-
-After successful deployment:
-1. Disable SSH password authentication
-2. Set up monitoring and logging
-3. Configure additional services
-4. Add more nodes to the cluster
+- **Private keys**: Never commit age private key to git
+- **Network**: Deploy on trusted networks or use VPN
+- **SSH**: Password auth is disabled by default (keys only)
 
 ---
 
-*"The fate of destruction is also the joy of rebirth."* - Gendo Ikari
+*"Do it yourself or you'll never change anything"* - Asuka Langley

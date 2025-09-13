@@ -1,36 +1,35 @@
 # NERV - NixOS Kubernetes GitOps Platform
 
-> A declarative, secure, and energy-efficient Kubernetes platform built with NixOS flakes and GitOps principles.
+> NixOS-based Kubernetes cluster with automated deployment and GitOps management.
 
 ## Overview
 
-NERV is a modern infrastructure platform that combines NixOS's declarative configuration management with Kubernetes orchestration and GitOps workflows. The project enables rapid deployment of NixOS nodes into a Kubernetes cluster with minimal manual intervention. This is a learning project and is in a lab environment.
+Automated NixOS cluster deployment using nixos-anywhere, SOPS secret management, and declarative disk partitioning. Built for learning DevOps/K8s in a home lab environment.
 
-**Planned Features:**
-- **One-click deployment** via NixOS-Anywhere
-- **Secure by default** with SOPS-based secret management
-- **GitOps-driven** cluster management
-- **Energy efficient** design principles
-- **Modular architecture** for easy maintenance
+**Features:**
+- Automated deployment via nixos-anywhere
+- SOPS-encrypted secrets
+- Declarative disk management with Btrfs
+- Modular NixOS configurations
 
 ## Current Status
 
 **Phase 1: Foundation** ✅
-- [x] NixOS flake structure with modular architecture
-- [x] Global configuration for all cluster nodes  
+- [x] Modular NixOS flake structure
+- [x] Global configuration for all cluster nodes
 - [x] Hardware-specific node configurations (Misato)
-- [x] Declarative disk management with Btrfs subvolumes
-- [x] Production-ready security and power management
-- [x] SOPS secret management with proper boot order
-- [x] NixOS-Anywhere deployment pipeline with age key handling
-- [x] Complete authentication (SSH keys + passwords)
+- [x] Btrfs subvolumes for disk management
+- [x] SSH hardening and power management
+- [x] SOPS secret management during boot
+- [x] Automated deployment with nixos-anywhere
+- [x] SSH key and password authentication
 
 **Future Phases**
-- [ ] Core Kubernetes cluster setup
+- [ ] Kubernetes cluster setup
 - [ ] GitOps workflow implementation
-- [ ] Advanced services deployment
-- [ ] Monitoring and observability
-- [ ] High availability configuration
+- [ ] Service deployment (Home Assistant, etc.)
+- [ ] Monitoring and logging
+- [ ] High availability setup
 
 ## Quick Start
 
@@ -47,7 +46,7 @@ nixos-anywhere --flake .#misato root@<target-ip>
 
 ## Deployment
 
-Ready to deploy? See **[DEPLOYMENT.md](DEPLOYMENT.md)** for complete deployment instructions including:
+See **[DEPLOYMENT.md](DEPLOYMENT.md)** for full deployment instructions including:
 - Hardware preparation and requirements
 - Secret management with SOPS
 - Step-by-step nixos-anywhere deployment
