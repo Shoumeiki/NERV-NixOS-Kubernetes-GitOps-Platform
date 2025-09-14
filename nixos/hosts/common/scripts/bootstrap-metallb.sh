@@ -37,7 +37,7 @@ kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.8/confi
 echo "Waiting for MetalLB controller..."
 kubectl wait --namespace metallb-system \
     --for=condition=ready pod \
-    --selector=app=metallb \
+    --selector=app.kubernetes.io/name=metallb \
     --timeout=300s
 
 # Create IP address pool for your network
