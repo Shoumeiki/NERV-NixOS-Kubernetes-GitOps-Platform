@@ -99,15 +99,51 @@
       };
     };
 
-    # Bootstrap ArgoCD automatically
-    services.bootstrap-argocd = {
-      description = "Bootstrap ArgoCD GitOps controller";
+    # Bootstrap MetalLB load balancer
+    services.bootstrap-metallb = {
+      description = "Bootstrap MetalLB load balancer";
       wantedBy = [ "multi-user.target" ];
       after = [ "k3s.service" "setup-ellen-kubeconfig.service" ];
       serviceConfig = {
         Type = "oneshot";
         RemainAfterExit = true;
+        ExecStart = "${pkgs.bash}/bin/bash ${../common/scripts/bootstrap-metallb.sh}";
+        Environment = [
+          "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
+          "PATH=${pkgs.kubectl}/bin:${pkgs.bash}/bin:/run/wrappers/bin"
+        ];
+        User = "root";
+        Group = "root";
+      };
+    };
+
+    # Bootstrap ArgoCD automatically
+    services.bootstrap-argocd = {
+      description = "Bootstrap ArgoCD GitOps controller";
+      wantedBy = [ "multi-user.target" ];
+      after = [ "k3s.service" "setup-ellen-kubeconfig.service" "bootstrap-metallb.service" ];
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
         ExecStart = "${pkgs.bash}/bin/bash ${../common/scripts/bootstrap-argocd.sh}";
+        Environment = [
+          "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
+          "PATH=${pkgs.kubectl}/bin:${pkgs.bash}/bin:/run/wrappers/bin"
+        ];
+        User = "root";
+        Group = "root";
+      };
+    };
+
+    # Bootstrap ingress configuration
+    services.bootstrap-ingress = {
+      description = "Bootstrap ingress and external access";
+      wantedBy = [ "multi-user.target" ];
+      after = [ "bootstrap-metallb.service" "bootstrap-argocd.service" ];
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        ExecStart = "${pkgs.bash}/bin/bash ${../common/scripts/bootstrap-ingress.sh}";
         Environment = [
           "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
           "PATH=${pkgs.kubectl}/bin:${pkgs.bash}/bin:/run/wrappers/bin"
