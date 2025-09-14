@@ -108,6 +108,12 @@
         Type = "oneshot";
         RemainAfterExit = true;
         ExecStart = "${pkgs.bash}/bin/bash ${../common/scripts/bootstrap-argocd.sh}";
+        Environment = [
+          "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
+          "PATH=${pkgs.kubectl}/bin:${pkgs.bash}/bin:/run/wrappers/bin"
+        ];
+        User = "root";
+        Group = "root";
       };
     };
 

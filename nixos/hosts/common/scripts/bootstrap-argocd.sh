@@ -4,9 +4,16 @@
 
 set -euo pipefail
 
-export KUBECONFIG="/etc/rancher/k3s/k3s.yaml"
-
+# KUBECONFIG is now set via systemd Environment
 echo "Bootstrapping ArgoCD on NERV cluster..."
+echo "Using KUBECONFIG: ${KUBECONFIG:-/etc/rancher/k3s/k3s.yaml}"
+
+# Verify kubectl is available
+if ! command -v kubectl >/dev/null 2>&1; then
+    echo "ERROR: kubectl not found in PATH"
+    echo "PATH: $PATH"
+    exit 1
+fi
 
 # Wait for K3s API to be ready
 echo "Waiting for Kubernetes API..."
