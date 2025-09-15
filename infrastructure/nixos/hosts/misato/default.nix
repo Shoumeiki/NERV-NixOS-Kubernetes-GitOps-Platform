@@ -82,25 +82,30 @@
           };
         };
         metallb-config = {
-          content = ''
-            apiVersion: metallb.io/v1beta1
-            kind: IPAddressPool
-            metadata:
-              name: nerv-pool
-              namespace: metallb-system
-            spec:
-              addresses:
-              - 192.168.1.110-192.168.1.150
-            ---
-            apiVersion: metallb.io/v1beta1
-            kind: L2Advertisement
-            metadata:
-              name: nerv-l2
-              namespace: metallb-system
-            spec:
-              ipAddressPools:
-              - nerv-pool
-          '';
+          content = [
+            {
+              apiVersion = "metallb.io/v1beta1";
+              kind = "IPAddressPool";
+              metadata = {
+                name = "nerv-pool";
+                namespace = "metallb-system";
+              };
+              spec = {
+                addresses = [ "192.168.1.110-192.168.1.150" ];
+              };
+            }
+            {
+              apiVersion = "metallb.io/v1beta1";
+              kind = "L2Advertisement";
+              metadata = {
+                name = "nerv-l2";
+                namespace = "metallb-system";
+              };
+              spec = {
+                ipAddressPools = [ "nerv-pool" ];
+              };
+            }
+          ];
         };
       };
     };
