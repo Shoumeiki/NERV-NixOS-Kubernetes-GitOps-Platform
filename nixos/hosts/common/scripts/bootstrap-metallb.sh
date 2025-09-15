@@ -21,28 +21,37 @@ if ! kubectl cluster-info >/dev/null 2>&1; then
 fi
 
 # Check if MetalLB is already installed
+METALLB_INSTALLED=false
 if kubectl get namespace metallb-system >/dev/null 2>&1; then
     echo "MetalLB namespace already exists, checking deployment..."
     if kubectl get deployment controller -n metallb-system >/dev/null 2>&1; then
         echo "✓ MetalLB already installed"
-        exit 0
+        METALLB_INSTALLED=true
     fi
 fi
 
-# Install MetalLB
-echo "Installing MetalLB..."
-kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.8/config/manifests/metallb-native.yaml
+# Install MetalLB if not already installed
+if [ "$METALLB_INSTALLED" = false ]; then
+    echo "Installing MetalLB..."
+    kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.8/config/manifests/metallb-native.yaml
 
-# Wait for MetalLB to be ready
-echo "Waiting for MetalLB controller..."
-kubectl wait --namespace metallb-system \
-    --for=condition=ready pod \
-    --selector=app.kubernetes.io/name=metallb \
-    --timeout=300s
+    # Wait for MetalLB to be ready
+    echo "Waiting for MetalLB controller..."
+    kubectl wait --namespace metallb-system \
+        --for=condition=ready pod \
+        --selector=app.kubernetes.io/name=metallb \
+        --timeout=300s
+fi
 
-# Create IP address pool for your network
-echo "Creating MetalLB IP address pool..."
-kubectl apply -f - <<EOF
+# Create IP address pool for your network (always run this part)
+echo "Configuring MetalLB IP address pool..."
+
+# Check if IP pool already exists
+if kubectl get ipaddresspool nerv-pool -n metallb-system >/dev/null 2>&1; then
+    echo "✓ IP address pool already exists"
+else
+    echo "Creating IP address pool..."
+    kubectl apply -f - <<EOF
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
 metadata:
@@ -51,7 +60,15 @@ metadata:
 spec:
   addresses:
   - 192.168.1.110-192.168.1.150
----
+EOF
+fi
+
+# Check if L2 advertisement already exists
+if kubectl get l2advertisement nerv-l2 -n metallb-system >/dev/null 2>&1; then
+    echo "✓ L2 advertisement already exists"
+else
+    echo "Creating L2 advertisement..."
+    kubectl apply -f - <<EOF
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement
 metadata:
@@ -61,6 +78,7 @@ spec:
   ipAddressPools:
   - nerv-pool
 EOF
+fi
 
-echo "✓ MetalLB load balancer installed successfully"
+echo "✓ MetalLB load balancer configured successfully"
 echo "IP Pool: 192.168.1.110-192.168.1.150"
