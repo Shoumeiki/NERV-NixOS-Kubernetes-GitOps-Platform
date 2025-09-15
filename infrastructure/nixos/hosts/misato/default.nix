@@ -140,6 +140,73 @@
             };
           };
         };
+        argocd-server-insecure = {
+          content = {
+            apiVersion = "apps/v1";
+            kind = "Deployment";
+            metadata = {
+              name = "argocd-server";
+              namespace = "argocd";
+            };
+            spec = {
+              template = {
+                spec = {
+                  containers = [
+                    {
+                      name = "argocd-server";
+                      args = [
+                        "argocd-server"
+                        "--insecure"
+                      ];
+                    }
+                  ];
+                };
+              };
+            };
+          };
+        };
+        argocd-rbac-controller = {
+          content = {
+            apiVersion = "rbac.authorization.k8s.io/v1";
+            kind = "ClusterRoleBinding";
+            metadata = {
+              name = "argocd-application-controller-admin";
+            };
+            roleRef = {
+              apiGroup = "rbac.authorization.k8s.io";
+              kind = "ClusterRole";
+              name = "cluster-admin";
+            };
+            subjects = [
+              {
+                kind = "ServiceAccount";
+                name = "argocd-application-controller";
+                namespace = "argocd";
+              }
+            ];
+          };
+        };
+        argocd-rbac-server = {
+          content = {
+            apiVersion = "rbac.authorization.k8s.io/v1";
+            kind = "ClusterRoleBinding";
+            metadata = {
+              name = "argocd-server-admin";
+            };
+            roleRef = {
+              apiGroup = "rbac.authorization.k8s.io";
+              kind = "ClusterRole";
+              name = "cluster-admin";
+            };
+            subjects = [
+              {
+                kind = "ServiceAccount";
+                name = "argocd-server";
+                namespace = "argocd";
+              }
+            ];
+          };
+        };
         argocd-repository = {
           content = {
             apiVersion = "v1";
