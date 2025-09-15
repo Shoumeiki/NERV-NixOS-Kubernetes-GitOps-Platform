@@ -140,6 +140,24 @@
             };
           };
         };
+        argocd-repository = {
+          content = {
+            apiVersion = "v1";
+            kind = "Secret";
+            metadata = {
+              name = "nerv-repository";
+              namespace = "default";
+              labels = {
+                "argocd.argoproj.io/secret-type" = "repository";
+              };
+            };
+            type = "Opaque";
+            stringData = {
+              type = "git";
+              url = "https://github.com/Shoumeiki/NERV-NixOS-Kubernetes-GitOps-Platform.git";
+            };
+          };
+        };
       };
     };
 
