@@ -28,21 +28,19 @@ kubectl wait --for=condition=available --timeout=300s deployment/argocd-server -
 echo "Configuring ArgoCD admin password..."
 ADMIN_PASSWORD_FILE="/run/secrets/argocd-admin-password"
 if [[ -f "$ADMIN_PASSWORD_FILE" ]] && [[ -s "$ADMIN_PASSWORD_FILE" ]]; then
-    CUSTOM_PASSWORD=$(cat "$ADMIN_PASSWORD_FILE")
+    # SOPS secret contains pre-hashed bcrypt password
+    BCRYPT_HASH=$(cat "$ADMIN_PASSWORD_FILE")
     
-    # Create bcrypt hash of the password
-    PASSWORD_HASH=$(echo -n "$CUSTOM_PASSWORD" | kubectl exec -n default deployment/argocd-server -- argocd-util admin hash-password 2>/dev/null | tail -n 1 || echo "")
-    
-    if [[ -n "$PASSWORD_HASH" ]]; then
-        # Update admin password
-        kubectl patch secret argocd-secret -n default -p="{\"data\":{\"admin.password\":\"$(echo -n "$PASSWORD_HASH" | base64 -w0)\"}}"
+    if [[ -n "$BCRYPT_HASH" ]] && [[ "$BCRYPT_HASH" =~ ^\$2[aby]\$ ]]; then
+        # Update admin password with pre-hashed bcrypt
+        kubectl patch secret argocd-secret -n default -p="{\"data\":{\"admin.password\":\"$(echo -n "$BCRYPT_HASH" | base64 -w0)\"}}"
         
         # Remove initial admin secret
         kubectl delete secret argocd-initial-admin-secret -n default --ignore-not-found=true
         
-        echo "✓ Custom admin password configured"
+        echo "Custom admin password configured"
     else
-        echo "WARNING: Failed to hash password, using default"
+        echo "WARNING: Invalid bcrypt hash format in SOPS secret"
     fi
 else
     echo "WARNING: Custom password file not found, using default"
