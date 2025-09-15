@@ -70,10 +70,16 @@
       # Install ArgoCD and MetalLB via manifests
       manifests = {
         argocd = {
-          source = "https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml";
+          source = pkgs.fetchurl {
+            url = "https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml";
+            sha256 = lib.fakeSha256;
+          };
         };
         metallb = {
-          source = "https://raw.githubusercontent.com/metallb/metallb/v0.14.8/config/manifests/metallb-native.yaml";
+          source = pkgs.fetchurl {
+            url = "https://raw.githubusercontent.com/metallb/metallb/v0.14.8/config/manifests/metallb-native.yaml";
+            sha256 = lib.fakeSha256;
+          };
         };
         metallb-config = {
           content = ''
