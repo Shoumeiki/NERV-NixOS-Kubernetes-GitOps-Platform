@@ -69,6 +69,15 @@
       
       # Install ArgoCD and MetalLB via manifests
       manifests = {
+        argocd-namespace = {
+          content = {
+            apiVersion = "v1";
+            kind = "Namespace";
+            metadata = {
+              name = "argocd";
+            };
+          };
+        };
         argocd = {
           source = pkgs.fetchurl {
             url = "https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml";
