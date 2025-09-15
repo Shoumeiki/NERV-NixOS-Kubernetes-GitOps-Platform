@@ -8,4 +8,4 @@ resources:
 patchesStrategicMerge:
   - argocd-server-insecure.yaml
 
-namespace: argocd
+namespace: default
