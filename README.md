@@ -25,9 +25,8 @@ NERV is a declarative Kubernetes platform that provides complete infrastructure 
 ```
 ├── infrastructure/     # NixOS infrastructure configuration
 │   └── nixos/         # Flake and node configurations
-├── platform/          # Platform services managed by ArgoCD
-│   └── argocd/        # ArgoCD self-management manifests
-├── applications/      # Application workloads
+├── platform/          # Platform-wide configurations
+├── services/          # Infrastructure services managed by ArgoCD
 ├── bootstrap/         # App-of-Apps pattern root
 └── docs/              # Documentation
 ```

@@ -79,9 +79,13 @@
           };
         };
         argocd = {
-          source = pkgs.fetchurl {
-            url = "https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml";
-            sha256 = "sha256-IQ5P36aTTbzCGhWX1uUA3r4pdlE7dlF/3TH4344LlsQ=";
+          content = {
+            apiVersion = "kustomize.config.k8s.io/v1beta1";
+            kind = "Kustomization";
+            namespace = "argocd";
+            resources = [
+              "https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml"
+            ];
           };
         };
         metallb = {
