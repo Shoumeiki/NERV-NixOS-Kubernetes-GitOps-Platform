@@ -56,7 +56,7 @@ if [[ -f "$ADMIN_PASSWORD_FILE" ]] && [[ -s "$ADMIN_PASSWORD_FILE" ]]; then
     CUSTOM_PASSWORD=$(cat "$ADMIN_PASSWORD_FILE")
     
     # Create bcrypt hash of the password (ArgoCD uses bcrypt)
-    PASSWORD_HASH=$(echo -n "$CUSTOM_PASSWORD" | kubectl exec -n argocd deployment/argocd-server -- argocd-util admin hash-password 2>/dev/null | grep -v "WARNING" || echo "")
+    PASSWORD_HASH=$(echo -n "$CUSTOM_PASSWORD" | kubectl exec -n argocd deployment/argocd-server -- argocd-util admin hash-password 2>/dev/null | tail -n 1 || echo "")
     
     if [[ -n "$PASSWORD_HASH" ]]; then
         # Update admin password

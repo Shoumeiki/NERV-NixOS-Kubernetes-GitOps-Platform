@@ -110,7 +110,7 @@
         ExecStart = "${pkgs.bash}/bin/bash ${../common/scripts/bootstrap-metallb.sh}";
         Environment = [
           "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
-          "PATH=${pkgs.kubectl}/bin:${pkgs.bash}/bin:${pkgs.coreutils}/bin:/run/wrappers/bin"
+          "PATH=${pkgs.kubectl}/bin:${pkgs.bash}/bin:${pkgs.coreutils}/bin:${pkgs.gnugrep}/bin:/run/wrappers/bin"
         ];
         User = "root";
         Group = "root";
@@ -128,7 +128,7 @@
         ExecStart = "${pkgs.bash}/bin/bash ${../common/scripts/bootstrap-argocd.sh}";
         Environment = [
           "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
-          "PATH=${pkgs.kubectl}/bin:${pkgs.bash}/bin:${pkgs.coreutils}/bin:/run/wrappers/bin"
+          "PATH=${pkgs.kubectl}/bin:${pkgs.bash}/bin:${pkgs.coreutils}/bin:${pkgs.gnugrep}/bin:/run/wrappers/bin"
         ];
         User = "root";
         Group = "root";
@@ -146,7 +146,7 @@
         ExecStart = "${pkgs.bash}/bin/bash ${../common/scripts/bootstrap-ingress.sh}";
         Environment = [
           "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
-          "PATH=${pkgs.kubectl}/bin:${pkgs.bash}/bin:${pkgs.coreutils}/bin:/run/wrappers/bin"
+          "PATH=${pkgs.kubectl}/bin:${pkgs.bash}/bin:${pkgs.coreutils}/bin:${pkgs.gnugrep}/bin:/run/wrappers/bin"
         ];
         User = "root";
         Group = "root";

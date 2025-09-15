@@ -35,12 +35,19 @@ if [ "$METALLB_INSTALLED" = false ]; then
     echo "Installing MetalLB..."
     kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.8/config/manifests/metallb-native.yaml
 
-    # Wait for MetalLB to be ready
+    # Wait for MetalLB to be ready (simple timeout approach)
     echo "Waiting for MetalLB controller..."
-    kubectl wait --namespace metallb-system \
-        --for=condition=ready pod \
-        --selector=app.kubernetes.io/name=metallb \
-        --timeout=300s
+    sleep 30
+    
+    # Verify MetalLB pods are running
+    for i in {1..30}; do
+        if kubectl get pods -n metallb-system | grep -q "Running"; then
+            echo "✓ MetalLB pods are running"
+            break
+        fi
+        echo "Waiting for MetalLB pods... ($i/30)"
+        sleep 2
+    done
 fi
 
 # Create IP address pool for your network (always run this part)

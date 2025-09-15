@@ -45,7 +45,7 @@ This guide covers deploying NERV nodes to real hardware using nixos-anywhere wit
 
 1. **Clone repository**:
    ```bash
-   git clone git@github.com:Shoumeiki/NERV-NixOS-Kubernetes-GitOps-Platform.git
+   git clone git@github.com:Shoumeiki/NERV-NixOS-Kubernetes-GitOps-Platform.git ~/nerv-test
    cd NERV-NixOS-Kubernetes-GitOps-Platform/nixos
    ```
 
@@ -72,14 +72,14 @@ This guide covers deploying NERV nodes to real hardware using nixos-anywhere wit
 1. **Prepare age key for deployment**:
    ```bash
    # Create the secrets directory structure for nixos-anywhere
-   mkdir -p /tmp/secrets/var/lib/sops-nix
-   cp ~/.config/sops/age/keys.txt /tmp/secrets/var/lib/sops-nix/key.txt
-   chmod 600 /tmp/secrets/var/lib/sops-nix/key.txt
+   mkdir -p ~/secrets/var/lib/sops-nix
+   cp ~/.config/sops/age/keys.txt ~/secrets/var/lib/sops-nix/key.txt
+   chmod 600 ~/secrets/var/lib/sops-nix/key.txt
    ```
 
 2. **Deploy with nixos-anywhere**:
    ```bash
-   nixos-anywhere --extra-files /tmp/secrets --flake .#misato root@<TARGET_IP>
+   nixos-anywhere --extra-files ~/secrets --flake .#misato root@<TARGET_IP>
    ```
 
    This will:
