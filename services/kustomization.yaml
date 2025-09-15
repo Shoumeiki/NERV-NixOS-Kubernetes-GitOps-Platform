@@ -6,4 +6,4 @@ kind: Kustomization
 
 resources: []
 
-namespace: argocd
+namespace: default

@@ -6,4 +6,4 @@ resources:
   - platform-apps.yaml  
   - service-apps.yaml
 
-namespace: argocd
+namespace: default

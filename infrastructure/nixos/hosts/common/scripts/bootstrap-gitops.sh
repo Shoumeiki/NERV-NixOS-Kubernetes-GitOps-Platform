@@ -10,19 +10,19 @@ echo "Using KUBECONFIG: ${KUBECONFIG:-/etc/rancher/k3s/k3s.yaml}"
 # Wait for ArgoCD to be ready
 echo "Waiting for ArgoCD to be ready..."
 timeout=300
-while ! kubectl get deployment argocd-server -n argocd >/dev/null 2>&1 && [[ $timeout -gt 0 ]]; do
+while ! kubectl get deployment argocd-server -n default >/dev/null 2>&1 && [[ $timeout -gt 0 ]]; do
     echo "Waiting for ArgoCD... ($((300-timeout))/300)"
     sleep 5
     ((timeout-=5))
 done
 
-if ! kubectl get deployment argocd-server -n argocd >/dev/null 2>&1; then
+if ! kubectl get deployment argocd-server -n default >/dev/null 2>&1; then
     echo "ERROR: ArgoCD not ready after 5 minutes"
     exit 1
 fi
 
 # Wait for ArgoCD server to be available
-kubectl wait --for=condition=available --timeout=300s deployment/argocd-server -n argocd
+kubectl wait --for=condition=available --timeout=300s deployment/argocd-server -n default
 
 # Set custom admin password from SOPS if available
 echo "Configuring ArgoCD admin password..."
@@ -33,10 +33,10 @@ if [[ -f "$ADMIN_PASSWORD_FILE" ]] && [[ -s "$ADMIN_PASSWORD_FILE" ]]; then
     
     if [[ -n "$BCRYPT_HASH" ]] && [[ "$BCRYPT_HASH" =~ ^\$2[aby]\$ ]]; then
         # Update admin password with pre-hashed bcrypt
-        kubectl patch secret argocd-secret -n argocd -p="{\"data\":{\"admin.password\":\"$(echo -n "$BCRYPT_HASH" | base64 -w0)\"}}"
+        kubectl patch secret argocd-secret -n default -p="{\"data\":{\"admin.password\":\"$(echo -n "$BCRYPT_HASH" | base64 -w0)\"}}"
         
         # Remove initial admin secret
-        kubectl delete secret argocd-initial-admin-secret -n argocd --ignore-not-found=true
+        kubectl delete secret argocd-initial-admin-secret -n default --ignore-not-found=true
         
         echo "Custom admin password configured"
     else
@@ -53,7 +53,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: nerv-root
-  namespace: argocd
+  namespace: default
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -64,7 +64,7 @@ spec:
     path: bootstrap
   destination:
     server: https://kubernetes.default.svc
-    namespace: argocd
+    namespace: default
   syncPolicy:
     automated:
       prune: true
@@ -79,5 +79,5 @@ echo "Username: admin"
 if [[ -f "$ADMIN_PASSWORD_FILE" ]] && [[ -s "$ADMIN_PASSWORD_FILE" ]]; then
     echo "Password: configured via SOPS"
 else
-    echo "Password: kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d"
+    echo "Password: kubectl -n default get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d"
 fi

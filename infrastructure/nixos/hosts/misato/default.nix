@@ -69,23 +69,10 @@
       
       # Install ArgoCD and MetalLB via manifests
       manifests = {
-        argocd-namespace = {
-          content = {
-            apiVersion = "v1";
-            kind = "Namespace";
-            metadata = {
-              name = "argocd";
-            };
-          };
-        };
         argocd = {
-          content = {
-            apiVersion = "kustomize.config.k8s.io/v1beta1";
-            kind = "Kustomization";
-            namespace = "argocd";
-            resources = [
-              "https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml"
-            ];
+          source = pkgs.fetchurl {
+            url = "https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml";
+            sha256 = "sha256-IQ5P36aTTbzCGhWX1uUA3r4pdlE7dlF/3TH4344LlsQ=";
           };
         };
         metallb = {
@@ -126,7 +113,7 @@
             kind = "Service";
             metadata = {
               name = "argocd-server-lb";
-              namespace = "argocd";
+              namespace = "default";
               annotations = {
                 "metallb.universe.tf/loadBalancerIPs" = "192.168.1.110";
               };
@@ -159,7 +146,7 @@
             kind = "Deployment";
             metadata = {
               name = "argocd-server";
-              namespace = "argocd";
+              namespace = "default";
             };
             spec = {
               template = {
@@ -194,7 +181,7 @@
               {
                 kind = "ServiceAccount";
                 name = "argocd-application-controller";
-                namespace = "argocd";
+                namespace = "default";
               }
             ];
           };
@@ -215,7 +202,7 @@
               {
                 kind = "ServiceAccount";
                 name = "argocd-server";
-                namespace = "argocd";
+                namespace = "default";
               }
             ];
           };
@@ -226,7 +213,7 @@
             kind = "Secret";
             metadata = {
               name = "nerv-repository";
-              namespace = "argocd";
+              namespace = "default";
               labels = {
                 "argocd.argoproj.io/secret-type" = "repository";
               };
