@@ -7,5 +7,6 @@ resources:
 
 patchesStrategicMerge:
   - argocd-server-insecure.yaml
+  - rbac-patches.yaml
 
 namespace: default
