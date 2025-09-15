@@ -11,4 +11,4 @@ patchesStrategicMerge:
   - rbac-patches.yaml
   - pod-fixes.yaml
 
-namespace: default
+namespace: argocd

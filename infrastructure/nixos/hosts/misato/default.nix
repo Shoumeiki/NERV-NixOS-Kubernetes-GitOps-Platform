@@ -113,7 +113,7 @@
             kind = "Service";
             metadata = {
               name = "argocd-server-lb";
-              namespace = "default";
+              namespace = "argocd";
               annotations = {
                 "metallb.universe.tf/loadBalancerIPs" = "192.168.1.110";
               };
@@ -146,7 +146,7 @@
             kind = "Secret";
             metadata = {
               name = "nerv-repository";
-              namespace = "default";
+              namespace = "argocd";
               labels = {
                 "argocd.argoproj.io/secret-type" = "repository";
               };
