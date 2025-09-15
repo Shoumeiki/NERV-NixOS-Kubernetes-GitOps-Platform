@@ -72,7 +72,7 @@
         argocd = {
           source = pkgs.fetchurl {
             url = "https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml";
-            sha256 = lib.fakeSha256;
+            sha256 = "sha256-IQ5P36aTTbzCGhWX1uUA3r4pdlE7dlF/3TH4344LlsQ=";
           };
         };
         metallb = {
