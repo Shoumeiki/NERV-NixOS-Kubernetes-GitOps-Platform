@@ -153,6 +153,24 @@
       };
     };
 
+    # Setup ArgoCD repository and applications
+    services.setup-argocd-repo = {
+      description = "Setup ArgoCD repository and initial applications";
+      wantedBy = [ "multi-user.target" ];
+      after = [ "bootstrap-ingress.service" ];
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        ExecStart = "${pkgs.bash}/bin/bash ${../common/scripts/setup-argocd-repo.sh}";
+        Environment = [
+          "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
+          "PATH=${pkgs.kubectl}/bin:${pkgs.bash}/bin:${pkgs.coreutils}/bin:${pkgs.gnugrep}/bin:/run/wrappers/bin"
+        ];
+        User = "root";
+        Group = "root";
+      };
+    };
+
     # No sleep for servers
     sleep.extraConfig = ''
       AllowSuspend=no
