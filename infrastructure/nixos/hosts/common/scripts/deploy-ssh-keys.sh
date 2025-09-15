@@ -35,10 +35,9 @@ chmod 600 "${AUTHORIZED_KEYS}"
 # Verify
 if [[ -f "${AUTHORIZED_KEYS}" ]] && [[ -s "${AUTHORIZED_KEYS}" ]]; then
     key_count=$(wc -l < "${AUTHORIZED_KEYS}")
-    echo "✓ Deployed ${key_count} key(s)"
+    echo "Deployed ${key_count} key(s)"
 
     # Show key types for verification
-    echo "Key types:"
     while IFS= read -r line; do
         if [[ ${line} =~ ^ssh- ]]; then
             echo "  $(echo "${line}" | cut -d' ' -f1,2 | head -c 40)..."

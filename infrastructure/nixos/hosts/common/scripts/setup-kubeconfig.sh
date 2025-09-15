@@ -39,7 +39,7 @@ chmod 600 "${KUBECONFIG}"
 
 # Verify setup
 if [[ -f "${KUBECONFIG}" ]] && [[ -r "${KUBECONFIG}" ]]; then
-    echo "✓ kubectl configuration ready for ${USER}"
+    echo "kubectl configuration ready for ${USER}"
 else
     echo "ERROR: Failed to set up kubeconfig"
     exit 1

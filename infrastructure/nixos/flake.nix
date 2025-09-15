@@ -1,6 +1,5 @@
-# flake.nix
-# NERV cluster deployment configuration
-# Usage: nix flake show
+# infrastructure/nixos/flake.nix
+# NixOS flake for NERV platform deployment
 
 {
   description = "NERV - NixOS Kubernetes Platform";
@@ -24,10 +23,7 @@
     system = "x86_64-linux";
     pkgs = nixpkgs.legacyPackages.${system};
 
-    # Add new nodes here
-    nodes = [
-      "misato"
-    ];
+    nodes = [ "misato" ];
 
     mkNodeConfig = nodeName: {
       name = nodeName;
@@ -53,11 +49,11 @@
       ];
 
       shellHook = ''
-        echo "NERV Command Centre"
-        echo "Available commands:"
-        echo "  nix flake check                        # Validate configurations"
-        echo "  nix flake show                         # List available systems"
-        echo "  nixos-rebuild build --flake .#misato   # Test build locally"
+        echo "NERV Development Environment"
+        echo "Commands:"
+        echo "  nix flake check                      # Validate configurations"
+        echo "  nix flake show                       # List available systems"  
+        echo "  nixos-rebuild build --flake .#misato # Test build locally"
       '';
     };
 

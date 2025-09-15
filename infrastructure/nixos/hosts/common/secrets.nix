@@ -1,4 +1,4 @@
-# hosts/common/secrets.nix
+# infrastructure/nixos/hosts/common/secrets.nix
 # SOPS secret management configuration
 
 { config, ... }:
@@ -6,11 +6,11 @@
 {
   sops = {
     defaultSopsFile = ../../secrets/secrets.yaml;
-    age.keyFile = "/var/lib/sops-nix/key.txt";  # nixos-anywhere places key here
+    age.keyFile = "/var/lib/sops-nix/key.txt";
     
     secrets = {
       "ellen/hashedPassword" = {
-        neededForUsers = true;  # Required for user creation
+        neededForUsers = true;
         name = "ellen-hashedPassword";
         owner = "root";
         group = "root";

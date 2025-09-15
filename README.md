@@ -1,65 +1,74 @@
-# NERV - NixOS Kubernetes GitOps Platform
+# NERV - Kubernetes GitOps Platform
 
-> NixOS-based Kubernetes cluster with automated deployment and GitOps management.
+Infrastructure-as-Code platform for automated Kubernetes deployment using NixOS, ArgoCD, and GitOps practices.
 
 ## Overview
 
-Automated NixOS cluster deployment using nixos-anywhere, SOPS secret management, and declarative disk partitioning. Built for learning DevOps/K8s in a home lab environment.
+NERV is a declarative Kubernetes platform that provides complete infrastructure automation from bare metal to GitOps-managed services. Built on NixOS for reproducible infrastructure and ArgoCD for declarative application management.
 
-**Features:**
-- Automated deployment via nixos-anywhere
-- SOPS-encrypted secrets
-- Declarative disk management with Btrfs
-- Modular NixOS configurations
+### Architecture
 
-## Current Status
+- **Infrastructure Layer**: NixOS configuration with K3s, MetalLB, and base services
+- **Platform Layer**: ArgoCD-managed cluster services (monitoring, ingress, storage)
+- **Application Layer**: GitOps-deployed workloads and applications
 
-**Phase 1: Foundation** ✅
-- [x] Modular NixOS flake structure
-- [x] Global configuration for all cluster nodes
-- [x] Hardware-specific node configurations (Misato)
-- [x] Btrfs subvolumes for disk management
-- [x] SSH hardening and power management
-- [x] SOPS secret management during boot
-- [x] Automated deployment with nixos-anywhere
-- [x] SSH key and password authentication
+### Key Technologies
 
-**Future Phases**
-- [ ] Kubernetes cluster setup
-- [ ] GitOps workflow implementation
-- [ ] Service deployment (Home Assistant, etc.)
-- [ ] Monitoring and logging
-- [ ] High availability setup
+- [NixOS](https://nixos.org/) - Declarative Linux distribution
+- [K3s](https://k3s.io/) - Lightweight Kubernetes distribution
+- [ArgoCD](https://argo-cd.readthedocs.io/) - GitOps continuous delivery
+- [MetalLB](https://metallb.universe.tf/) - Load balancer for bare metal
+- [SOPS](https://github.com/getsops/sops) - Encrypted secrets management
 
-## Quick Start
+## Repository Structure
 
-```bash
-# Validate configuration
-nix flake check
-
-# Test build locally
-nixos-rebuild build --flake .#misato
-
-# Deploy to remote host
-nixos-anywhere --flake .#misato root@<target-ip>
+```
+├── infrastructure/     # NixOS infrastructure configuration
+│   └── nixos/         # Flake and node configurations
+├── platform/          # Platform services managed by ArgoCD
+│   └── argocd/        # ArgoCD self-management manifests
+├── applications/      # Application workloads
+├── bootstrap/         # App-of-Apps pattern root
+└── docs/              # Documentation
 ```
 
 ## Deployment
 
-See **[DEPLOYMENT.md](DEPLOYMENT.md)** for full deployment instructions including:
-- Hardware preparation and requirements
-- Secret management with SOPS
-- Step-by-step nixos-anywhere deployment
-- Troubleshooting and recovery procedures
+### Prerequisites
 
-**Quick deployment checklist**:
-- Target hardware booted from NixOS ISO
-- Age private key available (`~/.config/sops/age/keys.txt`)
-- Configuration validated (`nix flake check`)
-- Network connectivity to target
-- Age key prepared: `mkdir -p /tmp/secrets/var/lib/sops-nix && cp ~/.config/sops/age/keys.txt /tmp/secrets/var/lib/sops-nix/key.txt`
-- **Deploy**: `nixos-anywhere --extra-files /tmp/secrets --flake .#<node> root@<ip>`
+- Target hardware with network boot capability
+- Age private key for SOPS decryption
+- Network access to target system
+
+### Installation
+
+```bash
+# Prepare secrets
+mkdir -p ~/secrets/var/lib/sops-nix
+cp ~/.config/sops/age/keys.txt ~/secrets/var/lib/sops-nix/key.txt
+
+# Deploy infrastructure
+nixos-anywhere --extra-files ~/secrets --flake ./infrastructure/nixos#misato root@<target-ip>
+```
+
+### Post-Deployment
+
+Access ArgoCD interface at `http://192.168.1.110` with admin credentials managed via SOPS.
+
+## GitOps Workflow
+
+The platform implements the App-of-Apps pattern:
+
+1. **Bootstrap Phase**: nixos-anywhere deploys base infrastructure and ArgoCD
+2. **Platform Phase**: ArgoCD synchronises platform services from Git
+3. **Application Phase**: Applications deployed via GitOps workflow
+
+All configuration changes are made via Git commits, ensuring auditability and rollback capability.
+
+## Development
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed setup instructions and [platform/](platform/) for service configuration examples.
 
 ---
 
-*"The fate of destruction is also the joy of rebirth."* - Gendo Ikari
+*"Don't run away."* - Rei Ayanami
