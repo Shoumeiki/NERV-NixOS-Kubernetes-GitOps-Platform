@@ -30,8 +30,21 @@
   # Misato Katsuragi - Operations Director, appropriate for control plane node
   networking = {
     hostName = "misato";
-    useDHCP = lib.mkDefault true;    # DHCP for flexible network configuration
+    useDHCP = lib.mkDefault false;   # Static IP for infrastructure stability
     wireless.enable = false;         # Wired connection for stability and security
+
+    # STATIC IP CONFIGURATION: Reserved node pool range 192.168.1.100-110
+    # This ensures consistent network identity for infrastructure nodes
+    interfaces.eth0 = {
+      ipv4.addresses = [{
+        address = "192.168.1.100";
+        prefixLength = 24;
+      }];
+    };
+
+    # NETWORK GATEWAY AND DNS: Standard home lab configuration
+    defaultGateway = "192.168.1.1";
+    nameservers = [ "192.168.1.2" "8.8.8.8" ];
   };
 
   # KUBERNETES NODE ROLE: Scalable architecture planning for future expansion
@@ -130,38 +143,32 @@
       ] ++ (lib.mapAttrsToList (key: value: "--node-label=${key}=${value}") config.nerv.nodeRole.nodeLabels));
     };
 
-    # NERV PLATFORM SERVICES: Complete GitOps-managed infrastructure stack
+    # NERV PLATFORM SERVICES: Flux v2 GitOps-managed infrastructure stack
     nerv = {
-      # GITOPS FOUNDATION: ArgoCD for declarative application management
-      argocd = {
+      # GITOPS FOUNDATION: Flux v2 for declarative infrastructure management
+      flux = {
         enable = true;
-        loadBalancerIP = config.nerv.network.services.argocd;
-        repositoryUrl = config.nerv.network.repository.url;
+        repository = {
+          url = config.nerv.network.repository.url;
+          branch = "main";
+          path = "infrastructure/kubernetes";
+        };
+        namespace = "flux-system";
+        interval = "1m";
       };
 
-      # NETWORK FOUNDATION: MetalLB for bare metal LoadBalancer services
-      metallb = {
-        enable = true;
-      };
-
-      # STORAGE FOUNDATION: Longhorn for distributed persistent volumes
-      longhorn = {
-        enable = true;
-        loadBalancerIP = config.nerv.network.services.longhorn;
-        defaultReplicaCount = 1;  # Single-node configuration (no replication)
-      };
-
-      # INGRESS FOUNDATION: Traefik for HTTP/HTTPS routing and load balancing
-      traefik = {
-        enable = true;
-        loadBalancerIP = config.nerv.network.services.traefik;
-      };
-
-      # CERTIFICATE FOUNDATION: cert-manager for automated TLS certificate management
-      cert-manager = {
-        enable = true;
-        acmeEmail = "shoumeiki@gmail.com";  # CHANGE: Replace with your email for Let's Encrypt
-      };
+      # NOTE: All other services (MetalLB, Traefik, cert-manager, Longhorn) are now
+      # managed through Flux v2 GitOps using official Helm charts. This provides:
+      # - Better maintainability with upstream chart updates
+      # - Reduced complexity in NixOS configuration
+      # - Standardized deployment patterns
+      # - Web UI access for all services (dashboard management)
+      #
+      # Services will be automatically deployed via:
+      # - infrastructure/kubernetes/releases/metallb/
+      # - infrastructure/kubernetes/releases/traefik/
+      # - infrastructure/kubernetes/releases/cert-manager/
+      # - infrastructure/kubernetes/releases/longhorn/
     };
 
     # DISABLE DESKTOP SERVICES: Optimize for headless server operation

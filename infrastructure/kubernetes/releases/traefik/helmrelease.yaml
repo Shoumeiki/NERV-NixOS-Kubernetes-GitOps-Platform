@@ -1,0 +1,128 @@
+# infrastructure/kubernetes/releases/traefik/helmrelease.yaml
+#
+# NERV Traefik Ingress Controller Configuration
+#
+# Traefik serves as the primary ingress controller and reverse proxy for the
+# NERV platform. This configuration enables HTTP/HTTPS routing, automatic
+# TLS certificate management, and provides a dashboard for traffic monitoring.
+
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: traefik
+  namespace: traefik-system
+  labels:
+    app.kubernetes.io/name: traefik
+    app.kubernetes.io/component: ingress-controller
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: traefik
+      version: "32.1.1"  # Stable version for production use
+      sourceRef:
+        kind: HelmRepository
+        name: traefik
+        namespace: flux-system
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    # Traefik Deployment Configuration
+    deployment:
+      enabled: true
+      kind: Deployment
+      replicas: 1
+
+    # Service Configuration with Static IP
+    service:
+      enabled: true
+      type: LoadBalancer
+      loadBalancerIP: "192.168.1.112"  # Reserved IP for Traefik
+      annotations:
+        metallb.universe.tf/loadBalancerIPs: "192.168.1.112"
+      spec:
+        externalTrafficPolicy: Local
+
+    # Traefik Configuration
+    additionalArguments:
+      - "--api.dashboard=true"
+      - "--ping=true"
+      - "--metrics.prometheus=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.websecure.http.tls=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt.acme.email=shoumeiki@gmail.com"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json"
+
+    # Ports Configuration
+    ports:
+      web:
+        port: 80
+        expose: true
+        protocol: TCP
+      websecure:
+        port: 443
+        expose: true
+        protocol: TCP
+        tls:
+          enabled: true
+      traefik:
+        port: 9000
+        expose: true
+        protocol: TCP
+
+    # Dashboard Configuration - Enable UI for management
+    ingressRoute:
+      dashboard:
+        enabled: true
+        annotations:
+          traefik.ingress.kubernetes.io/router.tls: "true"
+        matchRule: Host(`traefik.nerv.local`)
+        entryPoints:
+          - websecure
+        tls:
+          secretName: traefik-dashboard-tls
+
+    # Persistence for ACME certificates
+    persistence:
+      enabled: true
+      name: traefik-data
+      size: 1Gi
+      path: /data
+
+    # Resource Management
+    resources:
+      requests:
+        cpu: 100m
+        memory: 50Mi
+      limits:
+        cpu: 300m
+        memory: 150Mi
+
+    # Node Placement
+    nodeSelector:
+      node-role.kubernetes.io/control-plane: "true"
+    tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+
+    # Security Context
+    securityContext:
+      capabilities:
+        drop:
+          - ALL
+        add:
+          - NET_BIND_SERVICE
+      readOnlyRootFilesystem: true
+      runAsGroup: 65532
+      runAsNonRoot: true
+      runAsUser: 65532

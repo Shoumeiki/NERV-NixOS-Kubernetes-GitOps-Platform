@@ -1,0 +1,152 @@
+# infrastructure/kubernetes/releases/longhorn/helmrelease.yaml
+#
+# NERV Longhorn Distributed Storage Configuration
+#
+# Longhorn provides distributed block storage for Kubernetes with features
+# like replication, backup, and disaster recovery. This configuration sets
+# up persistent storage for the NERV platform with management UI access.
+
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: longhorn
+  namespace: longhorn-system
+  labels:
+    app.kubernetes.io/name: longhorn
+    app.kubernetes.io/component: storage
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: longhorn
+      version: "1.7.2"  # Latest stable version
+      sourceRef:
+        kind: HelmRepository
+        name: longhorn
+        namespace: flux-system
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    # Longhorn Default Settings
+    defaultSettings:
+      # Single-node configuration - no replication needed
+      defaultReplicaCount: 1
+
+      # Storage Configuration
+      defaultDataPath: "/var/lib/longhorn"
+      storageOverProvisioningPercentage: 100
+      storageMinimalAvailablePercentage: 25
+
+      # Backup Settings
+      backupTarget: ""  # Configure S3/NFS backup target if needed
+      backupTargetCredentialSecret: ""
+
+      # Node Management
+      allowVolumeCreationWithDegradedAvailability: false
+      autoCleanupSystemGeneratedSnapshot: true
+      autoDeletePodWhenVolumeDetachedUnexpectedly: true
+
+    # Longhorn Manager Configuration
+    longhornManager:
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: "true"
+
+    # Longhorn Driver Configuration
+    longhornDriver:
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: "true"
+
+    # Longhorn UI Configuration
+    longhornUI:
+      replicas: 1
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: "true"
+
+    # Service Configuration for UI Access
+    service:
+      ui:
+        type: LoadBalancer
+        loadBalancerIP: "192.168.1.113"  # Reserved IP for Longhorn UI
+        annotations:
+          metallb.universe.tf/loadBalancerIPs: "192.168.1.113"
+
+    # Ingress Configuration for Dashboard Access
+    ingress:
+      enabled: true
+      ingressClassName: traefik
+      host: longhorn.nerv.local
+      tls: true
+      tlsSecret: longhorn-tls
+      annotations:
+        cert-manager.io/cluster-issuer: "letsencrypt-staging"
+        traefik.ingress.kubernetes.io/router.tls: "true"
+
+    # Resource Management
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+    # Persistence Configuration
+    persistence:
+      defaultClass: true
+      defaultClassReplicaCount: 1  # Single-node setup
+      defaultFsType: ext4
+      reclaimPolicy: Retain
+
+    # CSI Configuration
+    csi:
+      kubeletRootDir: "/var/lib/kubelet"
+      attacherReplicaCount: 1
+      provisionerReplicaCount: 1
+      resizerReplicaCount: 1
+      snapshotterReplicaCount: 1
+
+    # Instance Manager Configuration
+    longhornInstanceManager:
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+
+---
+# StorageClass for Longhorn (will be set as default)
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: longhorn
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+  labels:
+    app.kubernetes.io/name: longhorn-storageclass
+    app.kubernetes.io/component: storage
+provisioner: driver.longhorn.io
+allowVolumeExpansion: true
+reclaimPolicy: Retain
+volumeBindingMode: Immediate
+parameters:
+  numberOfReplicas: "1"
+  staleReplicaTimeout: "2880"
+  fromBackup: ""
+  fsType: "ext4"

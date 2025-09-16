@@ -81,12 +81,14 @@
           ./modules/users.nix        # SSH security hardening and administrative access
           ./modules/node-roles.nix   # Kubernetes node role management and workload scheduling
 
-          # PLATFORM SERVICE MODULES: Complete Kubernetes infrastructure stack
-          ./modules/services/argocd.nix           # GitOps controller with enterprise security
-          ./modules/services/metallb.nix          # Bare metal load balancer for external access
-          ./modules/services/longhorn.nix         # Distributed storage for persistent workloads
-          ./modules/services/traefik.nix          # Ingress controller with TLS termination
-          ./modules/services/cert-manager.nix     # Automated certificate management
+          # PLATFORM SERVICE MODULES: GitOps-managed Kubernetes infrastructure stack
+          ./modules/services/flux.nix             # Flux v2 GitOps controller for declarative management
+          
+          # NOTE: All other platform services are now managed via Flux GitOps:
+          # - MetalLB, Traefik, cert-manager, Longhorn deployed as Helm charts
+          # - Better maintainability with official upstream charts
+          # - Web dashboards enabled for all services
+          # - Standardized deployment patterns following CNCF best practices
 
           # NODE-SPECIFIC CONFIGURATIONS: Hardware profiles and secrets
           ./hosts/common/secrets.nix # SOPS encrypted credential management

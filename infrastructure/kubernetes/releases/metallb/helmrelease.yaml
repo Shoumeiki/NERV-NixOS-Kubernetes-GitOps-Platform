@@ -1,0 +1,87 @@
+# infrastructure/kubernetes/releases/metallb/helmrelease.yaml
+#
+# NERV MetalLB Load Balancer Configuration
+#
+# MetalLB provides LoadBalancer services for bare metal Kubernetes clusters.
+# This configuration establishes the foundation for external service access
+# using the NERV platform IP allocation strategy (192.168.1.111-150).
+
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: metallb
+  namespace: metallb-system
+  labels:
+    app.kubernetes.io/name: metallb
+    app.kubernetes.io/component: load-balancer
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: metallb
+      version: "0.14.8"  # Stable version for production use
+      sourceRef:
+        kind: HelmRepository
+        name: metallb
+        namespace: flux-system
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    # MetalLB Controller Configuration
+    controller:
+      image:
+        repository: quay.io/metallb/controller
+        tag: v0.14.8
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: "true"
+
+    # MetalLB Speaker Configuration
+    speaker:
+      image:
+        repository: quay.io/metallb/speaker
+        tag: v0.14.8
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+
+---
+# MetalLB IP Address Pool Configuration
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: nerv-pool
+  namespace: metallb-system
+  labels:
+    app.kubernetes.io/name: nerv-ip-pool
+    app.kubernetes.io/component: network
+spec:
+  # NERV Platform Service Pool: 192.168.1.111-150 (40 IPs available)
+  # - 192.168.1.111-120: Reserved for core platform services
+  # - 192.168.1.121-150: Dynamic allocation for applications
+  addresses:
+    - 192.168.1.111-192.168.1.150
+
+---
+# Layer 2 Advertisement Configuration
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: nerv-l2-advertisement
+  namespace: metallb-system
+  labels:
+    app.kubernetes.io/name: nerv-l2-advertisement
+    app.kubernetes.io/component: network
+spec:
+  ipAddressPools:
+    - nerv-pool

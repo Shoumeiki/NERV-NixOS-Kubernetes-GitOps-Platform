@@ -1,0 +1,40 @@
+# infrastructure/kubernetes/flux-system/kustomization.yaml
+#
+# NERV Platform Flux GitOps Orchestration
+#
+# This kustomization defines the order and dependencies for deploying
+# the NERV platform infrastructure. Services are deployed in dependency
+# order to ensure proper startup and resource availability.
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Namespace for Flux system components
+namespace: flux-system
+
+# Resource deployment order - dependencies first
+resources:
+  # 1. FOUNDATION: Helm repositories for chart sources
+  - ../sources/helm-repositories.yaml
+
+  # 2. NETWORKING: Load balancer and IP allocation
+  - ../releases/metallb/helmrelease.yaml
+
+  # 3. CERTIFICATES: TLS certificate management
+  - ../releases/cert-manager/helmrelease.yaml
+
+  # 4. INGRESS: HTTP/HTTPS traffic routing
+  - ../releases/traefik/helmrelease.yaml
+
+  # 5. STORAGE: Persistent volume management
+  - ../releases/longhorn/helmrelease.yaml
+
+# Labels applied to all resources
+commonLabels:
+  app.kubernetes.io/managed-by: flux
+  app.kubernetes.io/part-of: nerv-platform
+
+# Annotations for GitOps tracking
+commonAnnotations:
+  config.kubernetes.io/local-config: "false"
+  fluxcd.io/managed: "true"

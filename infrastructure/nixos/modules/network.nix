@@ -35,11 +35,14 @@ in
     loadBalancerPool = {
       start = mkOption {
         type = types.str;
-        default = "192.168.1.110";
+        default = "192.168.1.111";
         description = ''
-          Starting IP address for MetalLB load balancer pool. This should be
-          within your local network range but outside DHCP allocation to
-          prevent conflicts. Reserved for platform infrastructure services.
+          Starting IP address for MetalLB load balancer pool.
+
+          IP Allocation Strategy:
+          - 192.168.1.100-110: Reserved for Kubernetes nodes
+          - 192.168.1.111-120: Reserved for core platform services
+          - 192.168.1.121-150: Dynamic allocation for applications
         '';
       };
 
@@ -47,9 +50,9 @@ in
         type = types.str;
         default = "192.168.1.150";
         description = ''
-          Ending IP address for MetalLB pool, providing 41 available IPs
-          (110-150) for LoadBalancer services. Sufficient for platform
-          services plus future application deployments.
+          Ending IP address for MetalLB pool, providing 40 available IPs
+          (111-150) for LoadBalancer services. This range supports both
+          reserved core services and dynamic application allocation.
         '';
       };
 
@@ -66,29 +69,40 @@ in
     # PLATFORM SERVICE IP ALLOCATION: Fixed IP addresses for core infrastructure services
     # Static IPs enable predictable DNS records, firewall rules, and external access
     services = {
-      argocd = mkOption {
-        type = types.str;
-        default = "192.168.1.110";
-        description = ''
-          Static IP for ArgoCD GitOps dashboard LoadBalancer service.
-          Primary interface for GitOps management and application deployment
-          monitoring. Requires external access for development workflow.
-        '';
-      };
-
-      longhorn = mkOption {
+      dns = mkOption {
         type = types.str;
         default = "192.168.1.111";
         description = ''
-          Static IP for Longhorn storage management UI LoadBalancer service.
-          Provides web interface for volume management, backup configuration,
-          and storage performance monitoring. Administrative access only.
+          Static IP for DNS service (Pi-hole or CoreDNS) LoadBalancer service.
+          Provides network-wide DNS resolution, ad-blocking, and custom domain
+          management. Critical infrastructure service requiring predictable IP.
         '';
       };
 
       traefik = mkOption {
         type = types.str;
         default = "192.168.1.112";
+        description = ''
+          Static IP for Traefik ingress controller and dashboard LoadBalancer.
+          Primary entry point for HTTP/HTTPS traffic with web UI for routing
+          management, middleware configuration, and certificate monitoring.
+        '';
+      };
+
+      longhorn = mkOption {
+        type = types.str;
+        default = "192.168.1.113";
+        description = ''
+          Static IP for Longhorn distributed storage management UI.
+          Provides web interface for volume management, backup configuration,
+          and storage performance monitoring. Administrative access only.
+        '';
+      };
+
+      # Reserved for future core services (192.168.1.114-120)
+      monitoring = mkOption {
+        type = types.str;
+        default = "192.168.1.114";
         description = ''
           Static IP for Traefik ingress controller LoadBalancer service.
           Primary entry point for all HTTP/HTTPS traffic to the cluster.
