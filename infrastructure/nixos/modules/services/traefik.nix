@@ -113,11 +113,19 @@ in
             name = "traefik";
           };
           rules = [
+            # CORE KUBERNETES RESOURCES: Essential cluster-wide permissions
             {
               apiGroups = [""];
-              resources = ["services" "secrets" "endpoints"];
+              resources = ["services" "secrets" "endpoints" "configmaps"];
               verbs = ["get" "list" "watch"];
             }
+            # NETWORK DISCOVERY: EndpointSlices for advanced load balancing
+            {
+              apiGroups = ["discovery.k8s.io"];
+              resources = ["endpointslices"];
+              verbs = ["get" "list" "watch"];
+            }
+            # STANDARD INGRESS RESOURCES: Native Kubernetes ingress support
             {
               apiGroups = ["extensions" "networking.k8s.io"];
               resources = ["ingresses" "ingressclasses"];
@@ -128,9 +136,21 @@ in
               resources = ["ingresses/status"];
               verbs = ["update"];
             }
+            # TRAEFIK CRD RESOURCES: Complete Traefik custom resource access
             {
               apiGroups = ["traefik.io"];
-              resources = ["ingressroutes" "traefikmiddlewares" "tlsoptions"];
+              resources = [
+                "ingressroutes"
+                "ingressroutetcps" 
+                "ingressrouteudps"
+                "middlewares"
+                "middlewaretcps"
+                "tlsoptions"
+                "tlsstores"
+                "traefikservices"
+                "serverstransports"
+                "serverstransporttcps"
+              ];
               verbs = ["get" "list" "watch"];
             }
           ];
