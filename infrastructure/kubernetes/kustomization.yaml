@@ -10,23 +10,22 @@ kind: Kustomization
 
 # Resource deployment order - dependencies first
 resources:
-  # 1. FOUNDATION: Helm repositories for chart sources
+  # 1. NAMESPACES: Create all required namespaces first
+  - namespaces.yaml
+
+  # 2. FOUNDATION: Helm repositories for chart sources
   - sources/helm-repositories.yaml
 
-  # 2. NETWORKING: Load balancer and IP allocation
+  # 3. NETWORKING: Load balancer and IP allocation
   - releases/metallb/helmrelease.yaml
 
-  # 3. CERTIFICATES: TLS certificate management
+  # 4. CERTIFICATES: TLS certificate management
   - releases/cert-manager/helmrelease.yaml
 
-  # NOTE: ClusterIssuers temporarily removed to prevent CRD dependency issues
-  # Will be added back once cert-manager is fully deployed
-  # - releases/cert-manager/cluster-issuers.yaml
-
-  # 4. INGRESS: HTTP/HTTPS traffic routing
+  # 5. INGRESS: HTTP/HTTPS traffic routing
   - releases/traefik/helmrelease.yaml
 
-  # 5. STORAGE: Persistent volume management
+  # 6. STORAGE: Persistent volume management
   - releases/longhorn/helmrelease.yaml
 
 # Labels for GitOps tracking

@@ -1,0 +1,46 @@
+# infrastructure/kubernetes/namespaces.yaml
+#
+# NERV Platform Service Namespaces
+#
+# Explicit namespace creation to ensure proper dependency ordering.
+# These namespaces must exist before HelmReleases can be validated.
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: metallb-system
+  labels:
+    app.kubernetes.io/name: metallb-system
+    app.kubernetes.io/component: networking
+    app.kubernetes.io/part-of: nerv-platform
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cert-manager
+  labels:
+    app.kubernetes.io/name: cert-manager
+    app.kubernetes.io/component: certificates
+    app.kubernetes.io/part-of: nerv-platform
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: traefik-system
+  labels:
+    app.kubernetes.io/name: traefik-system
+    app.kubernetes.io/component: ingress
+    app.kubernetes.io/part-of: nerv-platform
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: longhorn-system
+  labels:
+    app.kubernetes.io/name: longhorn-system
+    app.kubernetes.io/component: storage
+    app.kubernetes.io/part-of: nerv-platform
