@@ -35,7 +35,7 @@
     # Make critical binaries available to Longhorn containers
     mount.nfs=${pkgs.nfs-utils}/bin/mount.nfs
     umount.nfs=${pkgs.nfs-utils}/bin/umount.nfs
-    iscsiadm=${pkgs.open-iscsi}/bin/iscsiadm
+    iscsiadm=${pkgs.openiscsi}/bin/iscsiadm
     cryptsetup=${pkgs.cryptsetup}/bin/cryptsetup
     mkfs.ext4=${pkgs.e2fsprogs}/bin/mkfs.ext4
     mkfs.xfs=${pkgs.xfsprogs}/bin/mkfs.xfs
@@ -47,7 +47,7 @@
     fd ripgrep eza
     kubectl neovim
     # Storage dependencies for Longhorn
-    open-iscsi
+    openiscsi        # iSCSI client tools (correct nixpkgs name)
     util-linux
     nfs-utils        # NFSv4 client for RWX volumes and backups
     cryptsetup       # For encrypted volumes
