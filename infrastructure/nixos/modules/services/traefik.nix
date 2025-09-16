@@ -62,7 +62,7 @@ in
       traefik-crds = {
         source = pkgs.fetchurl {
           url = "https://raw.githubusercontent.com/traefik/traefik-helm-chart/v37.1.1/traefik/crds/traefik.io_ingressroutes.yaml";
-          sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";  # Will be updated on rebuild
+          sha256 = "sha256-jcvj3r4EHd6hHpacjWu67vlcFz8CbwsY5aXZ+3ar+Ro=";
         };
       };
 
