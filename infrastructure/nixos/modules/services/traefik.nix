@@ -89,7 +89,7 @@ in
       traefik-ingressroute-crd = {
         source = pkgs.fetchurl {
           url = "https://raw.githubusercontent.com/traefik/traefik/v3.5/docs/content/reference/dynamic-configuration/kubernetes-crd-definition-v1.yml";
-          sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";  # To be updated
+          sha256 = "sha256-TP+6dQprfQBgwY1bxQLvtub1VhHn+XQcKYVth8eJU88=";  # To be updated
         };
       };
 
