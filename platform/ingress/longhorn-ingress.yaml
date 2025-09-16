@@ -1,0 +1,40 @@
+# Longhorn UI IngressRoute using modern Traefik v3.x CRDs
+# Provides secure access to Longhorn storage management UI
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: longhorn-frontend
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`longhorn.nerv.local`)
+      kind: Rule
+      services:
+        - name: longhorn-frontend
+          port: 80
+          namespace: longhorn-system
+      middlewares:
+        - name: longhorn-security
+          namespace: default
+  tls:
+    certResolver: letsencrypt
+
+---
+# Security middleware for Longhorn UI
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: longhorn-security
+  namespace: default
+spec:
+  headers:
+    customResponseHeaders:
+      # Security headers for storage management UI
+      X-Frame-Options: "SAMEORIGIN"
+      X-Content-Type-Options: "nosniff"
+      X-XSS-Protection: "1; mode=block"
+      Referrer-Policy: "strict-origin-when-cross-origin"

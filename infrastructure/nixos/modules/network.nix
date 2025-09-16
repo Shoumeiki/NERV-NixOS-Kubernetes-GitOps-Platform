@@ -46,10 +46,16 @@ in
         description = "Static IP for Longhorn UI LoadBalancer service";
       };
 
+      traefik = mkOption {
+        type = types.str;
+        default = "192.168.1.112";
+        description = "Static IP for Traefik ingress LoadBalancer service";
+      };
+
       # Future service IPs
       # monitoring = mkOption {
       #   type = types.str;
-      #   default = "192.168.1.112";
+      #   default = "192.168.1.113";
       #   description = "Static IP for monitoring stack";
       # };
     };

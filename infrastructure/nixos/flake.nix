@@ -50,9 +50,11 @@
           ./modules/node-roles.nix   # Scalable node role definitions
 
           # Kubernetes service modules
-          ./modules/services/argocd.nix   # GitOps workflow management
-          ./modules/services/metallb.nix  # Load balancer for bare metal
-          ./modules/services/longhorn.nix # Distributed storage system
+          ./modules/services/argocd.nix     # GitOps workflow management
+          ./modules/services/metallb.nix    # Load balancer for bare metal
+          ./modules/services/longhorn.nix   # Distributed storage system
+          ./modules/services/traefik.nix    # Modern ingress controller v3.x
+          ./modules/services/cert-manager.nix # SSL/TLS certificate automation
 
           # Node-specific configurations
           ./hosts/common/secrets.nix # SOPS secret management

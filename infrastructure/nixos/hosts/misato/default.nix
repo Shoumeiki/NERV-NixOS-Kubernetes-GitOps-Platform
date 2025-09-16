@@ -101,6 +101,29 @@
         singleNodeMode = true;  # Will scale to multi-node automatically
         ui.loadBalancerIP = config.nerv.network.services.longhorn;
       };
+
+      # Modern ingress and SSL automation
+      traefik = {
+        enable = true;
+        loadBalancerIP = config.nerv.network.services.traefik;
+        dashboard = {
+          enable = true;
+          hostname = "traefik.nerv.local";
+        };
+        tls = {
+          enable = true;
+          acmeEmail = "admin@nerv.local";  # Change to your email
+        };
+      };
+
+      cert-manager = {
+        enable = true;
+        acmeEmail = "admin@nerv.local";  # Change to your email
+        letsencrypt = {
+          staging = false;  # Set to true for testing
+          wildcardDomains = []; # Add domains like ["*.nerv.local"] if needed
+        };
+      };
     };
 
     xserver.enable = false;
