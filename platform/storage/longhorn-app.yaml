@@ -23,23 +23,37 @@ spec:
         preUpgradeChecker:
           jobEnabled: false
         
+        # Disable priority class for single-node deployment
+        priorityClass: ""
+        longhornManager:
+          priorityClass: ""
+        longhornDriver:
+          priorityClass: ""
+        longhornUI:
+          priorityClass: ""
+          nodeSelector: {}
+          tolerations: []
+        
         defaultSettings:
           # Storage configuration for mixed hardware support
           defaultReplicaCount: 1
           storageOverProvisioningPercentage: 200
           storageMinimalAvailablePercentage: 25
           
+          # Single-node specific settings
+          replicaSoftAntiAffinity: false
+          allowRecurringJobWhileVolumeDetached: true
+          createDefaultDiskLabeledNodes: true
+          defaultDataLocality: "disabled"
+          nodeDownPodDeletionPolicy: "delete-both-statefulset-and-deployment-pod"
+          
           # Node scheduling - allow master for single-node
           taintToleration: "CriticalAddonsOnly=true:NoSchedule"
-          systemManagedComponentsNodeSelector: "longhorn.io/create-default-disk:true"
+          systemManagedComponentsNodeSelector: ""
           
           # Backup and DR preparation
-          backupTarget: ""  # Configure when backup storage available
+          backupTarget: ""
           backupTargetCredentialSecret: ""
-          
-          # Security and access
-          createDefaultDiskLabeledNodes: true
-          defaultDataLocality: "best-effort"
           
         # Service configuration
         service:
@@ -50,6 +64,9 @@ spec:
             
         # Resource configuration for energy efficiency
         longhornManager:
+          priorityClass: ""
+          nodeSelector: {}
+          tolerations: []
           resources:
             limits:
               cpu: 200m
@@ -59,6 +76,9 @@ spec:
               memory: 256Mi
               
         longhornDriver:
+          priorityClass: ""
+          nodeSelector: {}
+          tolerations: []
           resources:
             limits:
               cpu: 200m
@@ -66,6 +86,14 @@ spec:
             requests:
               cpu: 100m
               memory: 256Mi
+
+        # CSI driver configuration
+        csi:
+          kubeletRootDir: "/var/lib/kubelet"
+          attacherReplicaCount: 1
+          provisionerReplicaCount: 1
+          resizerReplicaCount: 1
+          snapshotterReplicaCount: 1
               
         # Storage classes for different tiers
         persistence:
