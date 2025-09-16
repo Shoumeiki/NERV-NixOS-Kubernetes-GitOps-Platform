@@ -30,21 +30,12 @@
   # Misato Katsuragi - Operations Director, appropriate for control plane node
   networking = {
     hostName = "misato";
-    useDHCP = lib.mkDefault false;   # Static IP for infrastructure stability
+    useDHCP = lib.mkDefault true;    # Use DHCP for reliable network access
     wireless.enable = false;         # Wired connection for stability and security
 
-    # STATIC IP CONFIGURATION: Reserved node pool range 192.168.1.100-110
-    # This ensures consistent network identity for infrastructure nodes
-    interfaces.eth0 = {
-      ipv4.addresses = [{
-        address = "192.168.1.100";
-        prefixLength = 24;
-      }];
-    };
-
-    # NETWORK GATEWAY AND DNS: Standard home lab configuration
-    defaultGateway = "192.168.1.1";
-    nameservers = [ "192.168.1.2" "8.8.8.8" ];
+    # NOTE: Static IP configuration disabled for now to ensure connectivity
+    # Will configure DHCP reservation on router for consistent IP assignment
+    # Target IP: 192.168.1.100 (reserved via router DHCP settings)
   };
 
   # KUBERNETES NODE ROLE: Scalable architecture planning for future expansion
