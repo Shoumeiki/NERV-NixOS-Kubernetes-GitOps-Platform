@@ -1,6 +1,25 @@
 # modules/services/cert-manager.nix
-# Modern cert-manager v1.18 for automatic SSL/TLS certificate management
-# Portfolio Note: Demonstrates enterprise SSL automation with Let's Encrypt
+#
+# Certificate Management Automation - Cloud Native TLS Certificate Lifecycle
+#
+# LEARNING OBJECTIVE: This module demonstrates enterprise-grade certificate
+# management using cert-manager, the de facto standard for Kubernetes TLS
+# automation. Key learning areas:
+#
+# 1. AUTOMATED TLS: Complete certificate lifecycle from issuance to renewal
+# 2. ACME PROTOCOL: Integration with Let's Encrypt for free, trusted certificates
+# 3. PRODUCTION READINESS: Staging vs production issuers for safe testing
+# 4. INGRESS INTEGRATION: Seamless integration with Traefik ingress controller
+#
+# WHY AUTOMATED CERTIFICATE MANAGEMENT MATTERS:
+# - Manual certificate management doesn't scale in modern cloud environments
+# - Certificate expiry is a leading cause of production outages
+# - Security compliance requires short-lived, regularly rotated certificates
+# - Multi-service architectures need dozens or hundreds of certificates
+#
+# ENTERPRISE CERTIFICATE STRATEGY: This implementation provides both staging
+# and production Let's Encrypt issuers, enabling safe testing of certificate
+# workflows before applying to production domains.
 
 { config, pkgs, lib, ... }:
 
@@ -12,203 +31,68 @@ in
 
 {
   options.services.nerv.cert-manager = {
-    enable = mkEnableOption "cert-manager v1.18 certificate automation";
+    enable = mkEnableOption "cert-manager (direct manifests)";
 
     namespace = mkOption {
       type = types.str;
       default = "cert-manager";
-      description = "Kubernetes namespace for cert-manager deployment";
+      description = ''
+        Dedicated namespace for certificate management components. Isolates
+        cert-manager from other workloads and enables granular RBAC policies.
+        Standard practice for critical infrastructure components.
+      '';
     };
 
     acmeEmail = mkOption {
       type = types.str;
-      description = "Email address for Let's Encrypt ACME registration";
+      description = ''
+        Contact email for Let's Encrypt ACME registration. Required for:
+        - Account creation and certificate issuance
+        - Critical notifications about certificate problems
+        - Rate limit management and abuse prevention
+        - Recovery contact for account issues
+      '';
     };
 
-    # Let's Encrypt environment configuration
-    letsencrypt = {
-      staging = mkOption {
-        type = types.bool;
-        default = false;
-        description = "Use Let's Encrypt staging environment (for testing)";
-      };
-
-      wildcardDomains = mkOption {
-        type = types.listOf types.str;
-        default = [];
-        description = "List of domains for wildcard certificate generation";
-        example = [ "*.nerv.local" "*.internal.nerv.local" ];
-      };
-    };
-
-    # DNS challenge configuration for wildcard certificates
-    dnsChallenge = {
-      enable = mkOption {
-        type = types.bool;
-        default = false;
-        description = "Enable DNS challenge for wildcard certificates";
-      };
-
-      provider = mkOption {
-        type = types.str;
-        default = "cloudflare";
-        description = "DNS provider for challenge (cloudflare, route53, etc.)";
-      };
+    image = mkOption {
+      type = types.str;
+      default = "quay.io/jetstack/cert-manager-controller:v1.18.2";
+      description = ''
+        cert-manager controller image from Red Hat Quay registry. Version
+        pinned for reproducible deployments. Quay provides vulnerability
+        scanning and enterprise-grade image distribution.
+      '';
     };
   };
 
   config = mkIf cfg.enable {
     services.k3s.manifests = {
-      # cert-manager ArgoCD Application for GitOps management
-      cert-manager-app = {
-        content = {
-          apiVersion = "argoproj.io/v1alpha1";
-          kind = "Application";
-          metadata = {
-            name = "cert-manager";
-            namespace = "default";
-            annotations = {
-              "argocd.argoproj.io/sync-wave" = "0";  # Deploy before Traefik
-            };
-            finalizers = [
-              "resources-finalizer.argocd.argoproj.io"
-            ];
-          };
-          spec = {
-            project = "default";
-            source = {
-              repoURL = "https://charts.jetstack.io";
-              chart = "cert-manager";
-              targetRevision = "v1.18.2";
-              helm = {
-                values = ''
-                  # Modern cert-manager v1.18 configuration
-                  # Optimized for enterprise SSL automation
-                  
-                  # Image configuration
-                  image:
-                    tag: v1.18.2
-                    pullPolicy: IfNotPresent
-                  
-                  # Resource configuration for mini PC efficiency
-                  resources:
-                    requests:
-                      cpu: 50m
-                      memory: 64Mi
-                    limits:
-                      cpu: 200m
-                      memory: 128Mi
-                  
-                  # Webhook configuration
-                  webhook:
-                    resources:
-                      requests:
-                        cpu: 20m
-                        memory: 32Mi
-                      limits:
-                        cpu: 100m
-                        memory: 64Mi
-                    nodeSelector:
-                      "node-role.kubernetes.io/control-plane": "true"
-                    tolerations:
-                      - key: node-role.kubernetes.io/control-plane
-                        operator: Exists
-                        effect: NoSchedule
-                  
-                  # CA Injector configuration
-                  cainjector:
-                    resources:
-                      requests:
-                        cpu: 50m
-                        memory: 64Mi
-                      limits:
-                        cpu: 200m
-                        memory: 128Mi
-                    nodeSelector:
-                      "node-role.kubernetes.io/control-plane": "true"
-                    tolerations:
-                      - key: node-role.kubernetes.io/control-plane
-                        operator: Exists
-                        effect: NoSchedule
-                  
-                  # Install CRDs automatically
-                  installCRDs: true
-                  
-                  # Security context for production readiness
-                  securityContext:
-                    runAsNonRoot: true
-                    runAsUser: 1000
-                    runAsGroup: 1000
-                    capabilities:
-                      drop: [ALL]
-                    readOnlyRootFilesystem: true
-                    allowPrivilegeEscalation: false
-                  
-                  # Node selector for control-plane scheduling
-                  nodeSelector:
-                    "node-role.kubernetes.io/control-plane": "true"
-                  
-                  # Tolerations for single-node setup
-                  tolerations:
-                    - key: node-role.kubernetes.io/control-plane
-                      operator: Exists
-                      effect: NoSchedule
-                  
-                  # Prometheus monitoring integration
-                  prometheus:
-                    enabled: true
-                    servicemonitor:
-                      enabled: false  # Will enable when Prometheus is deployed
-                  
-                  # Global configuration
-                  global:
-                    leaderElection:
-                      namespace: ${cfg.namespace}
-                '';
-              };
-            };
-            destination = {
-              server = "https://kubernetes.default.svc";
-              namespace = cfg.namespace;
-            };
-            syncPolicy = {
-              automated = {
-                prune = true;
-                selfHeal = true;
-              };
-              syncOptions = [
-                "CreateNamespace=true"
-                "ServerSideApply=true"
-                "Replace=true"
-                "Force=true"  # Force replace for RBAC conflicts
-              ];
-              retry = {
-                limit = 5;
-                backoff = {
-                  duration = "5s";
-                  factor = 2;
-                  maxDuration = "5m";
-                };
-              };
-            };
-          };
+      # DEPLOYMENT STRATEGY: Official manifests for maximum compatibility
+      # Using upstream cert-manager YAML instead of Helm charts provides:
+      # - Predictable resource definitions without template complexity
+      # - Direct visibility into all Kubernetes objects being created
+      # - Elimination of Helm as dependency and potential failure point
+      # - Easier troubleshooting with standard kubectl commands
+      cert-manager-manifests = {
+        source = pkgs.fetchurl {
+          url = "https://github.com/cert-manager/cert-manager/releases/download/v1.18.2/cert-manager.yaml";
+          sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";  # To be updated
         };
       };
 
-      # Let's Encrypt ClusterIssuer (Production)
-      letsencrypt-prod-issuer = mkIf (!cfg.letsencrypt.staging) {
+      # PRODUCTION CERTIFICATE ISSUER: Let's Encrypt production environment
+      # This issuer creates trusted certificates but has strict rate limits:
+      # - 50 certificates per registered domain per week
+      # - 5 failed authorizations per account per hostname per hour
+      letsencrypt-prod-issuer = {
         content = {
           apiVersion = "cert-manager.io/v1";
           kind = "ClusterIssuer";
           metadata = {
             name = "letsencrypt-prod";
-            annotations = {
-              "argocd.argoproj.io/sync-wave" = "1";
-            };
           };
           spec = {
             acme = {
-              # Let's Encrypt production server
               server = "https://acme-v02.api.letsencrypt.org/directory";
               email = cfg.acmeEmail;
               privateKeySecretRef = {
@@ -222,38 +106,28 @@ in
                     };
                   };
                 }
-              ] ++ (if cfg.dnsChallenge.enable then [
-                {
-                  dns01 = {
-                    "${cfg.dnsChallenge.provider}" = {
-                      # Provider-specific configuration will be added here
-                      # This is a placeholder for DNS challenge setup
-                    };
-                  };
-                  selector = {
-                    dnsNames = cfg.letsencrypt.wildcardDomains;
-                  };
-                }
-              ] else []);
+              ];
             };
           };
         };
       };
 
-      # Let's Encrypt ClusterIssuer (Staging) 
-      letsencrypt-staging-issuer = mkIf cfg.letsencrypt.staging {
+      # STAGING CERTIFICATE ISSUER: Let's Encrypt testing environment
+      # Critical for development and testing - staging environment provides:
+      # - Higher rate limits for testing (thousands vs 50 per week)
+      # - Identical workflow to production but untrusted root CA
+      # - Essential for validating certificate automation before production
+      # - Prevents accidental rate limiting of production domains
+      letsencrypt-staging-issuer = {
         content = {
           apiVersion = "cert-manager.io/v1";
           kind = "ClusterIssuer";
           metadata = {
             name = "letsencrypt-staging";
-            annotations = {
-              "argocd.argoproj.io/sync-wave" = "1";
-            };
           };
           spec = {
             acme = {
-              # Let's Encrypt staging server for testing
+              # Staging environment - higher limits, untrusted certificates
               server = "https://acme-staging-v02.api.letsencrypt.org/directory";
               email = cfg.acmeEmail;
               privateKeySecretRef = {
@@ -261,6 +135,9 @@ in
               };
               solvers = [
                 {
+                  # HTTP-01 challenge through Traefik ingress controller
+                  # This method validates domain ownership by serving a file
+                  # at http://domain/.well-known/acme-challenge/token
                   http01 = {
                     ingress = {
                       class = "traefik";
@@ -269,29 +146,6 @@ in
                 }
               ];
             };
-          };
-        };
-      };
-
-      # Default certificate for *.nerv.local (if wildcard domains configured)
-      default-wildcard-cert = mkIf (cfg.letsencrypt.wildcardDomains != []) {
-        content = {
-          apiVersion = "cert-manager.io/v1";
-          kind = "Certificate";
-          metadata = {
-            name = "nerv-wildcard-cert";
-            namespace = "traefik-system";
-            annotations = {
-              "argocd.argoproj.io/sync-wave" = "2";
-            };
-          };
-          spec = {
-            secretName = "nerv-wildcard-tls";
-            issuerRef = {
-              name = if cfg.letsencrypt.staging then "letsencrypt-staging" else "letsencrypt-prod";
-              kind = "ClusterIssuer";
-            };
-            dnsNames = cfg.letsencrypt.wildcardDomains;
           };
         };
       };

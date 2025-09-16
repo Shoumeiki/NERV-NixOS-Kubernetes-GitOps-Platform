@@ -1,6 +1,25 @@
 # modules/services/traefik.nix
-# Modern Traefik v3.x ingress controller with GitOps integration
-# Portfolio Note: Demonstrates cloud-native ingress with automatic SSL/TLS
+#
+# Traefik v3.x Ingress Controller - Direct Kubernetes Manifests Approach
+#
+# LEARNING OBJECTIVE: This module demonstrates why direct manifests are often
+# superior to complex Helm charts in production environments. By embedding
+# Kubernetes YAML directly in NixOS modules, we achieve:
+#
+# 1. PREDICTABILITY: No Helm schema changes breaking deployments
+# 2. TRANSPARENCY: Every resource is visible and version-controlled
+# 3. INTEGRATION: Native NixOS configuration without external dependencies
+# 4. SIMPLICITY: No ArgoCD-managing-ArgoCD recursion complexity
+#
+# DESIGN DECISION: We chose Traefik over NGINX Ingress because:
+# - Better cloud-native architecture (dynamic configuration)
+# - Built-in Let's Encrypt integration (reduces moving parts)
+# - Lower resource footprint (important for mini PC hardware)
+# - Superior debugging experience with dashboard UI
+#
+# ENTERPRISE PATTERN: Notice how we separate configuration (options) from
+# implementation (config) - this is standard NixOS module architecture that
+# allows for composition and reusability across different environments.
 
 { config, pkgs, lib, ... }:
 
@@ -11,299 +30,338 @@ let
 in
 
 {
+  # Module options define the external interface - what other modules can configure
   options.services.nerv.traefik = {
     enable = mkEnableOption "Traefik v3.x ingress controller";
 
+    # Fixed IP assignment prevents IP conflicts and enables predictable networking
     loadBalancerIP = mkOption {
       type = types.str;
       default = "192.168.1.112";
-      description = "LoadBalancer IP address for Traefik service";
+      description = ''
+        Static IP assigned by MetalLB for Traefik LoadBalancer service.
+        Must be within MetalLB IP pool range defined in network.nix.
+        This ensures predictable external access point for all ingress traffic.
+      '';
     };
 
+    # Namespace isolation is a Kubernetes security best practice
     namespace = mkOption {
       type = types.str;
       default = "traefik-system";
-      description = "Kubernetes namespace for Traefik deployment";
+      description = ''
+        Dedicated namespace for Traefik components. Isolates ingress controller
+        from application workloads and allows for granular RBAC policies.
+        Follows Kubernetes principle of least privilege.
+      '';
     };
 
-    # Dashboard configuration
-    dashboard = {
-      enable = mkOption {
-        type = types.bool;
-        default = true;
-        description = "Enable Traefik dashboard with authentication";
-      };
-
-      hostname = mkOption {
-        type = types.str;
-        default = "traefik.nerv.local";
-        description = "Hostname for Traefik dashboard access";
-      };
-    };
-
-    # SSL/TLS configuration
-    tls = {
-      enable = mkOption {
-        type = types.bool;
-        default = true;
-        description = "Enable automatic SSL/TLS with cert-manager integration";
-      };
-
-      acmeEmail = mkOption {
-        type = types.str;
-        description = "Email address for Let's Encrypt ACME registration";
-      };
+    # Version pinning prevents unexpected upgrades in production
+    image = mkOption {
+      type = types.str;
+      default = "traefik:v3.5";
+      description = ''
+        Traefik container image with explicit version tag. Never use 'latest'
+        in production as it breaks reproducibility and can introduce
+        unexpected breaking changes during pod restarts.
+      '';
     };
   };
 
   config = mkIf cfg.enable {
     services.k3s.manifests = {
-      # Traefik CRDs - Modern approach with dedicated CRD management
-      traefik-crds = {
-        source = pkgs.fetchurl {
-          url = "https://raw.githubusercontent.com/traefik/traefik-helm-chart/v37.1.1/traefik/crds/traefik.io_ingressroutes.yaml";
-          sha256 = "sha256-jcvj3r4EHd6hHpacjWu67vlcFz8CbwsY5aXZ+3ar+Ro=";
+      # Traefik namespace
+      traefik-namespace = {
+        content = {
+          apiVersion = "v1";
+          kind = "Namespace";
+          metadata = {
+            name = cfg.namespace;
+            labels = {
+              "app.kubernetes.io/name" = "traefik";
+              "app.kubernetes.io/component" = "ingress-controller";
+            };
+          };
         };
       };
 
-      # Traefik ArgoCD Application for GitOps management
-      traefik-app = {
+      # Traefik CRDs (essential ones only)
+      traefik-ingressroute-crd = {
+        source = pkgs.fetchurl {
+          url = "https://raw.githubusercontent.com/traefik/traefik/v3.5/docs/content/reference/dynamic-configuration/kubernetes-crd-definition-v1.yml";
+          sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";  # To be updated
+        };
+      };
+
+      # Traefik RBAC
+      traefik-service-account = {
         content = {
-          apiVersion = "argoproj.io/v1alpha1";
-          kind = "Application";
+          apiVersion = "v1";
+          kind = "ServiceAccount";
           metadata = {
             name = "traefik";
-            namespace = "default";
-            annotations = {
-              "argocd.argoproj.io/sync-wave" = "1";
+            namespace = cfg.namespace;
+          };
+        };
+      };
+
+      traefik-cluster-role = {
+        content = {
+          apiVersion = "rbac.authorization.k8s.io/v1";
+          kind = "ClusterRole";
+          metadata = {
+            name = "traefik";
+          };
+          rules = [
+            {
+              apiGroups = [""];
+              resources = ["services" "secrets" "endpoints"];
+              verbs = ["get" "list" "watch"];
+            }
+            {
+              apiGroups = ["extensions" "networking.k8s.io"];
+              resources = ["ingresses" "ingressclasses"];
+              verbs = ["get" "list" "watch"];
+            }
+            {
+              apiGroups = ["extensions" "networking.k8s.io"];
+              resources = ["ingresses/status"];
+              verbs = ["update"];
+            }
+            {
+              apiGroups = ["traefik.io"];
+              resources = ["ingressroutes" "traefikmiddlewares" "tlsoptions"];
+              verbs = ["get" "list" "watch"];
+            }
+          ];
+        };
+      };
+
+      traefik-cluster-role-binding = {
+        content = {
+          apiVersion = "rbac.authorization.k8s.io/v1";
+          kind = "ClusterRoleBinding";
+          metadata = {
+            name = "traefik";
+          };
+          roleRef = {
+            apiGroup = "rbac.authorization.k8s.io";
+            kind = "ClusterRole";
+            name = "traefik";
+          };
+          subjects = [
+            {
+              kind = "ServiceAccount";
+              name = "traefik";
+              namespace = cfg.namespace;
+            }
+          ];
+        };
+      };
+
+      # Traefik deployment
+      traefik-deployment = {
+        content = {
+          apiVersion = "apps/v1";
+          kind = "Deployment";
+          metadata = {
+            name = "traefik";
+            namespace = cfg.namespace;
+            labels = {
+              "app.kubernetes.io/name" = "traefik";
+              "app.kubernetes.io/component" = "ingress-controller";
             };
-            finalizers = [
-              "resources-finalizer.argocd.argoproj.io"
-            ];
           };
           spec = {
-            project = "default";
-            source = {
-              repoURL = "https://traefik.github.io/charts";
-              chart = "traefik";
-              targetRevision = "37.1.1";
-              helm = {
-                values = ''
-                  # Modern Traefik v3.x configuration for NERV platform
-                  # Optimized for single-node with enterprise features
-                  
-                  # Image configuration
-                  image:
-                    tag: "v3.5"
-                    pullPolicy: IfNotPresent
-                  
-                  # Deployment configuration for mini PC efficiency
-                  deployment:
-                    replicas: 1
-                    resources:
-                      requests:
-                        cpu: 100m
-                        memory: 128Mi
-                      limits:
-                        cpu: 300m
-                        memory: 256Mi
-                  
-                  # Service configuration with MetalLB integration
-                  service:
-                    type: LoadBalancer
-                    spec:
-                      loadBalancerIP: "${cfg.loadBalancerIP}"
-                    annotations:
-                      metallb.universe.tf/loadBalancerIPs: "${cfg.loadBalancerIP}"
-                  
-                  # Ingress controller configuration
-                  ingressClass:
-                    enabled: true
-                    isDefaultClass: true
-                    name: traefik
-                  
-                  # Modern providers configuration
-                  providers:
-                    kubernetesCRD:
-                      enabled: true
-                      allowCrossNamespace: true
-                      allowExternalNameServices: true
-                    kubernetesIngress:
-                      enabled: true
-                      allowExternalNameServices: true
-                      publishedService:
-                        enabled: true
-                  
-                  # Ports configuration for multiple protocols
-                  ports:
-                    web:
-                      port: 8000
-                      expose:
-                        default: true
-                      exposedPort: 80
-                      protocol: TCP
-                      redirectTo:
-                        port: websecure
-                    websecure:
-                      port: 8443
-                      expose:
-                        default: true
-                      exposedPort: 443
-                      protocol: TCP
-                      tls:
-                        enabled: true
-                    traefik:
-                      port: 9000
-                      expose:
-                        default: false
-                      protocol: TCP
-                  
-                  # Global configuration
-                  globalArguments:
-                    - "--global.checknewversion=false"
-                    - "--global.sendanonymoususage=false"
-                  
-                  # Additional configuration for enterprise features
-                  additionalArguments:
-                    - "--log.level=INFO"
-                    - "--accesslog=true"
-                    - "--metrics.prometheus=true"
-                    - "--metrics.prometheus.addEntryPointsLabels=true"
-                    - "--metrics.prometheus.addServicesLabels=true"
-                    - "--entrypoints.web.address=:8000"
-                    - "--entrypoints.websecure.address=:8443"
-                    - "--certificatesresolvers.letsencrypt.acme.email=${cfg.tls.acmeEmail}"
-                    - "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json"
-                    - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
-                  
-                  # Persistence for ACME certificates
-                  persistence:
-                    enabled: true
-                    size: 1Gi
-                    path: /data
-                    accessMode: ReadWriteOnce
-                  
-                  # Security context for production readiness
-                  securityContext:
-                    capabilities:
-                      drop: [ALL]
-                    readOnlyRootFilesystem: true
-                    runAsGroup: 65532
-                    runAsNonRoot: true
-                    runAsUser: 65532
-                  
-                  podSecurityContext:
-                    fsGroup: 65532
-                    fsGroupChangePolicy: OnRootMismatch
-                    runAsGroup: 65532
-                    runAsNonRoot: true
-                    runAsUser: 65532
-                  
-                  # Health checks and probes
-                  readinessProbe:
-                    failureThreshold: 1
-                    initialDelaySeconds: 2
-                    periodSeconds: 10
-                    successThreshold: 1
-                    timeoutSeconds: 2
-                  
-                  livenessProbe:
-                    failureThreshold: 3
-                    initialDelaySeconds: 2
-                    periodSeconds: 10
-                    successThreshold: 1
-                    timeoutSeconds: 2
-                  
-                  # Node selector for control-plane scheduling
-                  nodeSelector:
-                    "node-role.kubernetes.io/control-plane": "true"
-                  
-                  # Tolerations for single-node setup
-                  tolerations:
-                    - key: node-role.kubernetes.io/control-plane
-                      operator: Exists
-                      effect: NoSchedule
-                '';
+            replicas = 1;
+            selector = {
+              matchLabels = {
+                "app.kubernetes.io/name" = "traefik";
               };
             };
-            destination = {
-              server = "https://kubernetes.default.svc";
-              namespace = cfg.namespace;
-            };
-            syncPolicy = {
-              automated = {
-                prune = true;
-                selfHeal = true;
-              };
-              syncOptions = [
-                "CreateNamespace=true"
-                "ServerSideApply=true"
-              ];
-              retry = {
-                limit = 3;
-                backoff = {
-                  duration = "5s";
-                  factor = 2;
-                  maxDuration = "3m";
+            template = {
+              metadata = {
+                labels = {
+                  "app.kubernetes.io/name" = "traefik";
                 };
+              };
+              spec = {
+                serviceAccountName = "traefik";
+                nodeSelector = {
+                  "node-role.kubernetes.io/control-plane" = "true";
+                };
+                tolerations = [
+                  {
+                    key = "node-role.kubernetes.io/control-plane";
+                    operator = "Exists";
+                    effect = "NoSchedule";
+                  }
+                ];
+                containers = [
+                  {
+                    name = "traefik";
+                    image = cfg.image;
+                    imagePullPolicy = "IfNotPresent";
+                    args = [
+                      "--api.dashboard=true"
+                      "--api.insecure=true"
+                      "--providers.kubernetescrd=true"
+                      "--providers.kubernetesingress=true"
+                      "--entrypoints.web.address=:80"
+                      "--entrypoints.websecure.address=:443"
+                      "--certificatesresolvers.letsencrypt.acme.email=admin@nerv.local"
+                      "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json"
+                      "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+                      "--log.level=INFO"
+                      "--accesslog=true"
+                      "--metrics.prometheus=true"
+                    ];
+                    ports = [
+                      {
+                        name = "web";
+                        containerPort = 80;
+                        protocol = "TCP";
+                      }
+                      {
+                        name = "websecure";
+                        containerPort = 443;
+                        protocol = "TCP";
+                      }
+                      {
+                        name = "dashboard";
+                        containerPort = 8080;
+                        protocol = "TCP";
+                      }
+                    ];
+                    volumeMounts = [
+                      {
+                        name = "data";
+                        mountPath = "/data";
+                      }
+                    ];
+                    resources = {
+                      requests = {
+                        cpu = "100m";
+                        memory = "128Mi";
+                      };
+                      limits = {
+                        cpu = "300m";
+                        memory = "256Mi";
+                      };
+                    };
+                    securityContext = {
+                      runAsNonRoot = true;
+                      runAsUser = 65532;
+                      runAsGroup = 65532;
+                      readOnlyRootFilesystem = true;
+                      capabilities = {
+                        drop = ["ALL"];
+                      };
+                    };
+                    livenessProbe = {
+                      httpGet = {
+                        path = "/ping";
+                        port = 8080;
+                      };
+                      initialDelaySeconds = 10;
+                      periodSeconds = 10;
+                    };
+                    readinessProbe = {
+                      httpGet = {
+                        path = "/ping";
+                        port = 8080;
+                      };
+                      initialDelaySeconds = 5;
+                      periodSeconds = 5;
+                    };
+                  }
+                ];
+                volumes = [
+                  {
+                    name = "data";
+                    emptyDir = {};
+                  }
+                ];
               };
             };
           };
         };
       };
 
-      # Traefik Dashboard IngressRoute (Modern CRD approach)
-      traefik-dashboard = mkIf cfg.dashboard.enable {
+      # Traefik LoadBalancer service
+      traefik-service = {
         content = {
-          apiVersion = "traefik.io/v1alpha1";
-          kind = "IngressRoute";
+          apiVersion = "v1";
+          kind = "Service";
+          metadata = {
+            name = "traefik";
+            namespace = cfg.namespace;
+            annotations = {
+              "metallb.universe.tf/loadBalancerIPs" = cfg.loadBalancerIP;
+            };
+          };
+          spec = {
+            type = "LoadBalancer";
+            loadBalancerIP = cfg.loadBalancerIP;
+            selector = {
+              "app.kubernetes.io/name" = "traefik";
+            };
+            ports = [
+              {
+                name = "web";
+                port = 80;
+                targetPort = "web";
+                protocol = "TCP";
+              }
+              {
+                name = "websecure";
+                port = 443;
+                targetPort = "websecure";
+                protocol = "TCP";
+              }
+            ];
+          };
+        };
+      };
+
+      # Traefik dashboard service (internal)
+      traefik-dashboard-service = {
+        content = {
+          apiVersion = "v1";
+          kind = "Service";
           metadata = {
             name = "traefik-dashboard";
             namespace = cfg.namespace;
-            annotations = {
-              "argocd.argoproj.io/sync-wave" = "2";
-            };
           };
           spec = {
-            entryPoints = [ "websecure" ];
-            routes = [
+            selector = {
+              "app.kubernetes.io/name" = "traefik";
+            };
+            ports = [
               {
-                match = "Host(`${cfg.dashboard.hostname}`)";
-                kind = "Rule";
-                services = [
-                  {
-                    name = "api@internal";
-                    kind = "TraefikService";
-                  }
-                ];
-                middlewares = [
-                  {
-                    name = "dashboard-auth";
-                    namespace = cfg.namespace;
-                  }
-                ];
+                name = "dashboard";
+                port = 8080;
+                targetPort = "dashboard";
+                protocol = "TCP";
               }
             ];
-            tls = mkIf cfg.tls.enable {
-              certResolver = "letsencrypt";
-            };
           };
         };
       };
 
-      # Dashboard authentication middleware
-      traefik-dashboard-auth = mkIf cfg.dashboard.enable {
+      # IngressClass for Traefik
+      traefik-ingress-class = {
         content = {
-          apiVersion = "traefik.io/v1alpha1";
-          kind = "Middleware";
+          apiVersion = "networking.k8s.io/v1";
+          kind = "IngressClass";
           metadata = {
-            name = "dashboard-auth";
-            namespace = cfg.namespace;
+            name = "traefik";
+            annotations = {
+              "ingressclass.kubernetes.io/is-default-class" = "true";
+            };
           };
           spec = {
-            basicAuth = {
-              secret = "traefik-dashboard-auth";
-            };
+            controller = "traefik.io/ingress-controller";
           };
         };
       };

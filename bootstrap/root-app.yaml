@@ -1,22 +1,42 @@
+# NERV GitOps Root Application - App-of-Apps Pattern Implementation
+#
+# LEARNING OBJECTIVE: This ArgoCD Application demonstrates the App-of-Apps pattern,
+# a foundational GitOps architecture for managing complex multi-service platforms.
+#
+# KEY CONCEPTS DEMONSTRATED:
+# 1. APP-OF-APPS PATTERN: Single root application manages all platform services
+# 2. AUTOMATED SYNCHRONIZATION: Self-healing and pruning for declarative state
+# 3. BOOTSTRAP WORKFLOW: Minimal initial application that manages everything else
+# 4. GITOPS PRINCIPLES: Git repository as single source of truth for all resources
+#
+# WHY APP-OF-APPS ARCHITECTURE MATTERS:
+# - Enables management of dozens of applications through single deployment
+# - Provides consistent synchronization policies across all platform services
+# - Simplifies disaster recovery (redeploy single application to restore everything)
+# - Supports multi-environment promotion through branch/tag management
+
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: nerv-root
   namespace: default
   finalizers:
-    - resources-finalizer.argocd.argoproj.io
+    - resources-finalizer.argocd.argoproj.io  # Ensures proper cleanup on deletion
 spec:
   project: default
   source:
+    # GITOPS SOURCE: Repository containing all platform application definitions
     repoURL: https://github.com/Shoumeiki/NERV-NixOS-Kubernetes-GitOps-Platform.git
-    targetRevision: HEAD
-    path: bootstrap
+    targetRevision: HEAD                      # Track main branch for continuous deployment
+    path: bootstrap                           # Directory containing child applications
   destination:
+    # TARGET CLUSTER: Self-referential deployment to current cluster
     server: https://kubernetes.default.svc
     namespace: default
   syncPolicy:
+    # AUTOMATED SYNCHRONIZATION: Continuous reconciliation of desired state
     automated:
-      prune: true
-      selfHeal: true
+      prune: true                             # Remove resources no longer in Git
+      selfHeal: true                          # Automatically fix drift from desired state
     syncOptions:
-      - CreateNamespace=true
+      - CreateNamespace=true                  # Automatically create target namespaces

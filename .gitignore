@@ -1,5 +1,6 @@
 # Claude Code session files
 .claude/
+.claude.toml
 
 # Editor directories
 .vscode/
