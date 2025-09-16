@@ -96,7 +96,7 @@ in
       "nerv.io/role" = cfg.role;
       "nerv.io/hardware-profile" = cfg.hardwareProfile;
       "nerv.io/storage-tier" = cfg.storage.tier;
-      "longhorn.io/create-default-disk" = 
+      "node.longhorn.io/create-default-disk" = 
         if cfg.storage.allowScheduling then "true" else "false";
     };
 

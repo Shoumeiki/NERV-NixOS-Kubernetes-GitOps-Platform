@@ -79,10 +79,10 @@
       clusterInit = true;
       tokenFile = config.sops.secrets."k3s/token".path;
       
-      extraFlags = toString [
+      extraFlags = toString ([
         "--disable=traefik"
         "--disable=servicelb"
-      ];
+      ] ++ (lib.mapAttrsToList (key: value: "--node-label=${key}=${value}") config.nerv.nodeRole.nodeLabels));
     };
 
     nerv = {
