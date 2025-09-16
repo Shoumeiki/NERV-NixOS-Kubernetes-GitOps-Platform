@@ -25,6 +25,12 @@ spec:
         
         # Disable priority class for single-node deployment
         priorityClass: ""
+        
+        # Global single-node settings
+        global:
+          cattle:
+            systemDefaultRegistry: ""
+          
         longhornManager:
           priorityClass: ""
         longhornDriver:
@@ -46,10 +52,24 @@ spec:
           createDefaultDiskLabeledNodes: true
           defaultDataLocality: "disabled"
           nodeDownPodDeletionPolicy: "delete-both-statefulset-and-deployment-pod"
+          disableSchedulingOnCordonedNode: false
+          replicaZoneSoftAntiAffinity: false
+          volumeAttachmentRecoveryPolicy: "wait"
+          mkfsExt4Parameters: ""
           
           # Node scheduling - allow master for single-node
           taintToleration: "CriticalAddonsOnly=true:NoSchedule"
           systemManagedComponentsNodeSelector: ""
+          guaranteedEngineManagerCPU: 12
+          guaranteedReplicaManagerCPU: 12
+          
+          # Volume and engine settings for single-node
+          autoSalvage: true
+          autoDeletePodWhenVolumeDetachedUnexpectedly: true
+          disableRevisionCounter: false
+          removeSnapshotsDuringFilesystemTrim: false
+          fastReplicaRebuildEnabled: true
+          concurrentAutomaticEngineUpgradePerNodeLimit: 1
           
           # Backup and DR preparation
           backupTarget: ""
@@ -67,6 +87,11 @@ spec:
           priorityClass: ""
           nodeSelector: {}
           tolerations: []
+          env:
+            - name: LONGHORN_MANAGER_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
           resources:
             limits:
               cpu: 200m
