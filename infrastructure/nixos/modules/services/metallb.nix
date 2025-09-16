@@ -27,7 +27,7 @@ in
       metallb = {
         source = pkgs.fetchurl {
           url = "https://raw.githubusercontent.com/metallb/metallb/v0.15.2/config/manifests/metallb-native.yaml";
-          sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";  # Will be updated on rebuild
+          sha256 = "sha256-obBMN2+znJMmX1Uf4jcWo65uCbeQ7bO/JX0/x4TDWhg=";
         };
       };
 
