@@ -139,18 +139,10 @@ in
                     runAsNonRoot: true
                     runAsUser: 1000
                     runAsGroup: 1000
-                    fsGroup: 1000
                     capabilities:
                       drop: [ALL]
                     readOnlyRootFilesystem: true
                     allowPrivilegeEscalation: false
-                  
-                  # Pod security context
-                  podSecurityContext:
-                    runAsNonRoot: true
-                    runAsUser: 1000
-                    runAsGroup: 1000
-                    fsGroup: 1000
                   
                   # Node selector for control-plane scheduling
                   nodeSelector:

@@ -138,20 +138,23 @@ in
                   ports:
                     web:
                       port: 8000
-                      expose: true
+                      expose:
+                        default: true
                       exposedPort: 80
                       protocol: TCP
                       redirectTo: websecure
                     websecure:
                       port: 8443
-                      expose: true
+                      expose:
+                        default: true
                       exposedPort: 443
                       protocol: TCP
                       tls:
                         enabled: true
                     traefik:
                       port: 9000
-                      expose: false
+                      expose:
+                        default: false
                       protocol: TCP
                   
                   # Global configuration
