@@ -30,6 +30,12 @@
   time.timeZone = "Australia/Melbourne";
   i18n.defaultLocale = "en_AU.UTF-8";
 
+  # Fixes for Longhorn on NixOS
+  systemd.tmpfiles.rules = [
+    "L+ /usr/local/bin - - - - /run/current-system/sw/bin/"
+  ];
+  virtualisation.docker.logDriver = "json-file";
+
   # Longhorn path requirements for NixOS
   environment.etc."longhorn-paths".text = ''
     # Make critical binaries available to Longhorn containers

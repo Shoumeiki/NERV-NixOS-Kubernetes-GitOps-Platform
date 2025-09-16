@@ -1,0 +1,78 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: openebs-localpv
+  namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://openebs.github.io/openebs
+    chart: openebs
+    targetRevision: "4.1.1"
+    helm:
+      values: |
+        # OpenEBS LocalPV for single-node with enterprise features
+        # Better NixOS compatibility than Longhorn
+        
+        # Disable components we don't need for single-node
+        jiva:
+          enabled: false
+        cstor:
+          enabled: false
+        mayastor:
+          enabled: false
+        
+        # Enable LocalPV provisioner (NixOS compatible)
+        localprovisioner:
+          enabled: true
+          deviceClass:
+            enabled: true
+          hostpathClass:
+            enabled: true
+            name: "openebs-hostpath"
+            isDefaultClass: true
+            reclaimPolicy: "Retain"
+            
+        # Enable snapshots and monitoring
+        snapshotOperator:
+          enabled: true
+          controller:
+            resizeEnable: true
+            
+        # Resource configuration for mini PC
+        localpv:
+          image:
+            pullPolicy: IfNotPresent
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+              
+        # Enable monitoring integration
+        analytics:
+          enabled: false  # Disable analytics for privacy
+          
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: openebs
+    
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
