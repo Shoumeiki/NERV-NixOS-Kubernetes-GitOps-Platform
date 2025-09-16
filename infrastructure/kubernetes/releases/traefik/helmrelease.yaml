@@ -66,17 +66,20 @@ spec:
     ports:
       web:
         port: 80
-        expose: true
+        expose:
+          default: true
         protocol: TCP
       websecure:
         port: 443
-        expose: true
+        expose:
+          default: true
         protocol: TCP
         tls:
           enabled: true
       traefik:
         port: 9000
-        expose: true
+        expose:
+          default: true
         protocol: TCP
 
     # Dashboard Configuration - Enable UI for management
