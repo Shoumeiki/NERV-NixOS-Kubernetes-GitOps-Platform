@@ -3,6 +3,8 @@ kind: Application
 metadata:
   name: longhorn
   namespace: default
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -12,9 +14,14 @@ spec:
     chart: longhorn
     targetRevision: "1.7.2"
     helm:
+      skipCrds: false
       values: |
         # Single-node development configuration
         # Scales automatically to multi-node production
+        
+        # Disable pre-upgrade hook for initial deployment
+        preUpgradeChecker:
+          jobEnabled: false
         
         defaultSettings:
           # Storage configuration for mixed hardware support
@@ -81,9 +88,10 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+      - Replace=true
     retry:
-      limit: 3
+      limit: 5
       backoff:
         duration: 5s
         factor: 2
-        maxDuration: 3m
+        maxDuration: 5m
