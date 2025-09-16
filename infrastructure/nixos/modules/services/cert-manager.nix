@@ -179,7 +179,8 @@ in
               syncOptions = [
                 "CreateNamespace=true"
                 "ServerSideApply=true"
-                "Replace=true"  # Required for CRD updates
+                "Replace=true"
+                "Force=true"  # Force replace for RBAC conflicts
               ];
               retry = {
                 limit = 5;

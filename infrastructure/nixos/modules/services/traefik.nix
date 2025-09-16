@@ -142,7 +142,8 @@ in
                         default: true
                       exposedPort: 80
                       protocol: TCP
-                      redirectTo: websecure
+                      redirectTo:
+                        port: websecure
                     websecure:
                       port: 8443
                       expose:
