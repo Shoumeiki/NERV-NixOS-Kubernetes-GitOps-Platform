@@ -19,6 +19,9 @@ resources:
   # 3. CERTIFICATES: TLS certificate management
   - releases/cert-manager/helmrelease.yaml
 
+  # 3b. CERTIFICATE ISSUERS: Let's Encrypt ClusterIssuers (after cert-manager CRDs)
+  - releases/cert-manager/cluster-issuers.yaml
+
   # 4. INGRESS: HTTP/HTTPS traffic routing
   - releases/traefik/helmrelease.yaml
 
