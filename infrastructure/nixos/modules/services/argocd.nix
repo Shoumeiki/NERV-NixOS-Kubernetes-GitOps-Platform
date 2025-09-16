@@ -114,32 +114,39 @@ in
       # Use official ArgoCD manifests with proper namespace configuration
       # NAMESPACE ENFORCEMENT: Patch upstream manifests to deploy to configured namespace
       argocd-install = {
-        source = pkgs.runCommand "argocd-namespaced-install" {
-          buildInputs = [ pkgs.yq-go pkgs.curl ];
-        } ''
-          # Download upstream ArgoCD manifest
-          curl -L ${if cfg.highAvailability
-                     then "https://raw.githubusercontent.com/argoproj/argo-cd/v3.1.5/manifests/ha/install.yaml"
-                     else "https://raw.githubusercontent.com/argoproj/argo-cd/v3.1.5/manifests/install.yaml"} > upstream.yaml
-          
-          # CRITICAL FIX: Add namespace to all namespaced resources that don't have one
-          # The upstream manifest has many resources without explicit namespace, causing 
-          # them to deploy to 'default'. We need to patch ALL namespaced resources.
-          yq eval '
-            (select(.kind == "ServiceAccount" and .metadata.namespace == null) | .metadata.namespace) = "${cfg.namespace}" |
-            (select(.kind == "Secret" and .metadata.namespace == null) | .metadata.namespace) = "${cfg.namespace}" |  
-            (select(.kind == "ConfigMap" and .metadata.namespace == null) | .metadata.namespace) = "${cfg.namespace}" |
-            (select(.kind == "Service" and .metadata.namespace == null) | .metadata.namespace) = "${cfg.namespace}" |
-            (select(.kind == "Deployment" and .metadata.namespace == null) | .metadata.namespace) = "${cfg.namespace}" |
-            (select(.kind == "StatefulSet" and .metadata.namespace == null) | .metadata.namespace) = "${cfg.namespace}" |
-            (select(.kind == "Role" and .metadata.namespace == null) | .metadata.namespace) = "${cfg.namespace}" |
-            (select(.kind == "RoleBinding" and .metadata.namespace == null) | .metadata.namespace) = "${cfg.namespace}" |
-            (select(.kind == "NetworkPolicy" and .metadata.namespace == null) | .metadata.namespace) = "${cfg.namespace}"
-          ' upstream.yaml > $out
-          
-          # Also patch any hardcoded namespace references in RoleBindings
-          yq eval -i '(select(.kind == "RoleBinding") | .subjects[]?.namespace) = "${cfg.namespace}"' $out
-        '';
+        source = 
+          let
+            # Download upstream ArgoCD manifest using fetchurl (supports Nix sandbox)
+            upstreamManifest = pkgs.fetchurl {
+              url = if cfg.highAvailability
+                    then "https://raw.githubusercontent.com/argoproj/argo-cd/v3.1.5/manifests/ha/install.yaml"
+                    else "https://raw.githubusercontent.com/argoproj/argo-cd/v3.1.5/manifests/install.yaml";
+              sha256 = if cfg.highAvailability
+                       then "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="  # Placeholder - update if HA needed
+                       else "sha256-IQ5P36aTTbzCGhWX1uUA3r4pdlE7dlF/3TH4344LlsQ=";
+            };
+          in
+          pkgs.runCommand "argocd-namespaced-install" {
+            buildInputs = [ pkgs.yq-go ];
+          } ''
+            # CRITICAL FIX: Add namespace to all namespaced resources that don't have one
+            # The upstream manifest has many resources without explicit namespace, causing 
+            # them to deploy to 'default'. We need to patch ALL namespaced resources.
+            yq eval '
+              (select(.kind == "ServiceAccount" and .metadata.namespace == null) | .metadata.namespace) = "${cfg.namespace}" |
+              (select(.kind == "Secret" and .metadata.namespace == null) | .metadata.namespace) = "${cfg.namespace}" |  
+              (select(.kind == "ConfigMap" and .metadata.namespace == null) | .metadata.namespace) = "${cfg.namespace}" |
+              (select(.kind == "Service" and .metadata.namespace == null) | .metadata.namespace) = "${cfg.namespace}" |
+              (select(.kind == "Deployment" and .metadata.namespace == null) | .metadata.namespace) = "${cfg.namespace}" |
+              (select(.kind == "StatefulSet" and .metadata.namespace == null) | .metadata.namespace) = "${cfg.namespace}" |
+              (select(.kind == "Role" and .metadata.namespace == null) | .metadata.namespace) = "${cfg.namespace}" |
+              (select(.kind == "RoleBinding" and .metadata.namespace == null) | .metadata.namespace) = "${cfg.namespace}" |
+              (select(.kind == "NetworkPolicy" and .metadata.namespace == null) | .metadata.namespace) = "${cfg.namespace}"
+            ' ${upstreamManifest} > $out
+            
+            # Also patch any hardcoded namespace references in RoleBindings
+            yq eval -i '(select(.kind == "RoleBinding") | .subjects[]?.namespace) = "${cfg.namespace}"' $out
+          '';
       };
 
       # Enterprise LoadBalancer service with security annotations
