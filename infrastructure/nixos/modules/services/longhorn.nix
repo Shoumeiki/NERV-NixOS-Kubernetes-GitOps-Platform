@@ -127,7 +127,7 @@ in
       longhorn-install = {
         source = pkgs.fetchurl {
           url = "https://raw.githubusercontent.com/longhorn/longhorn/v1.9.1/deploy/longhorn.yaml";
-          sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";  # To be updated
+          sha256 = "sha256-g77oFLzbAwzBYmxlWcAB8FOrAHX/FOcdAjFSfCQ0anU=";
         };
       };
 
