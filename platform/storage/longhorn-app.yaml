@@ -12,7 +12,7 @@ spec:
   source:
     repoURL: https://charts.longhorn.io
     chart: longhorn
-    targetRevision: "1.7.2"
+    targetRevision: "1.9.1"
     helm:
       skipCrds: false
       values: |
@@ -45,6 +45,9 @@ spec:
           defaultReplicaCount: 1
           storageOverProvisioningPercentage: 200
           storageMinimalAvailablePercentage: 25
+          
+          # Automatic node and disk configuration
+          createDefaultDiskLabeledNodes: true
           
           # Single-node specific settings
           replicaSoftAntiAffinity: false
