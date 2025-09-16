@@ -3,11 +3,9 @@
 
 <div align="center">
 
-![Platform Status](https://img.shields.io/badge/Status-Production%20Ready-green)
 ![NixOS](https://img.shields.io/badge/NixOS-25.05-blue)
 ![Kubernetes](https://img.shields.io/badge/Kubernetes-K3s-326CE5)
 ![GitOps](https://img.shields.io/badge/GitOps-ArgoCD-E54A2A)
-![License](https://img.shields.io/badge/License-MIT-yellow)
 
 </div>
 
@@ -26,32 +24,6 @@
 ---
 
 ## **Architecture Overview**
-
-### **Three-Layer Design Pattern**
-
-```mermaid
-graph TB
-    subgraph "Application Layer"
-        A1[Home Assistant] --> A2[Monitoring Dashboards]
-        A2 --> A3[Custom Applications]
-    end
-
-    subgraph "Platform Layer (GitOps Managed)"
-        P1[Ingress Controller] --> P2[Certificate Management]
-        P2 --> P3[Storage Provisioning]
-        P3 --> P4[Monitoring Stack]
-        P4 --> P5[Backup Solutions]
-    end
-
-    subgraph "Infrastructure Layer (NixOS)"
-        I1[Base System] --> I2[Kubernetes Cluster]
-        I2 --> I3[Load Balancer]
-        I3 --> I4[Secret Management]
-    end
-
-    Application --> Platform
-    Platform --> Infrastructure
-```
 
 ### **Core Technology Stack**
 
@@ -106,43 +78,6 @@ NERV-NixOS-Kubernetes-GitOps-Platform/
 ├── 📄 DEPLOYMENT.md                 # Detailed deployment guide
 └── 📄 infrastructure/README.md      # Infrastructure-specific documentation
 ```
-
----
-
-## **Quick Start Deployment**
-
-### **Prerequisites**
-
-| Requirement | Purpose | Notes |
-|-------------|---------|-------|
-| **Target Hardware** | Mini PC or server | Intel NUC recommended, 8GB+ RAM |
-| **Network Access** | SSH to target system | Static IP or DHCP reservation preferred |
-| **Age Private Key** | SOPS secret decryption | Generated during initial setup |
-| **Git Repository** | Source of truth | Fork this repository for your environment |
-
-### **One-Command Deployment**
-
-```bash
-# 1. Prepare secrets directory
-mkdir -p ~/secrets/var/lib/sops-nix
-cp ~/.config/sops/age/keys.txt ~/secrets/var/lib/sops-nix/key.txt
-
-# 2. Deploy complete infrastructure (NixOS + Kubernetes + ArgoCD)
-nixos-anywhere --extra-files ~/secrets \
-               --flake ./infrastructure/nixos#misato \
-               root@<target-ip>
-
-# 3. Platform services automatically deploy via ArgoCD GitOps
-# No additional steps required - everything is declarative!
-```
-
-### **Post-Deployment Access**
-
-| Service | URL | Credentials | Purpose |
-|---------|-----|-------------|---------|
-| **ArgoCD UI** | `http://192.168.1.110` | SOPS-managed | GitOps dashboard and app management |
-| **Traefik Dashboard** | `http://192.168.1.112:8080` | Direct access | Ingress controller monitoring |
-| **Longhorn UI** | `http://192.168.1.111` | Direct access | Storage management and monitoring |
 
 ---
 
@@ -265,7 +200,6 @@ This project serves as a comprehensive learning platform for modern DevOps pract
 - **[DEPLOYMENT.md](DEPLOYMENT.md)**: Detailed deployment guide with troubleshooting
 - **[Infrastructure README](infrastructure/README.md)**: Infrastructure-specific documentation
 - **[Project Status](.claude/PROJECT_STATUS.md)**: Current progress and technical details
-- **[Project Guidance](.claude/project-prompt.md)**: Comprehensive development guidelines
 
 ---
 

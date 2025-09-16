@@ -19,44 +19,6 @@ The NERV infrastructure layer provides the foundation for the entire Kubernetes 
 
 ## **Architecture Components**
 
-### **Infrastructure Stack**
-
-```mermaid
-graph TB
-    subgraph "Hardware Layer"
-        H1[Intel NUC / Mini PC]
-        H2[Network Switch]
-        H3[Internet Gateway]
-    end
-
-    subgraph "NixOS System Layer"
-        N1[Base System Configuration]
-        N2[User Management & SSH]
-        N3[Network Configuration]
-        N4[Storage Subsystem]
-        N5[Container Runtime]
-    end
-
-    subgraph "Kubernetes Foundation"
-        K1[K3s Cluster]
-        K2[MetalLB Load Balancer]
-        K3[ArgoCD Bootstrap]
-        K4[SOPS-Nix Secrets]
-    end
-
-    H1 --> N1
-    H2 --> N3
-    H3 --> N3
-    N1 --> K1
-    N2 --> K1
-    N3 --> K2
-    N4 --> K1
-    N5 --> K1
-    K1 --> K3
-    K2 --> K3
-    K4 --> K3
-```
-
 ### **Directory Structure**
 
 ```bash
@@ -168,18 +130,18 @@ kubectl get all -A | grep -E "(traefik|longhorn|cert-manager|metallb)"
 
 1. **Create Host Configuration**
    ```bash
-   mkdir infrastructure/nixos/hosts/new-node
-   cp infrastructure/nixos/hosts/misato/* infrastructure/nixos/hosts/new-node/
+   mkdir infrastructure/nixos/hosts/<node>
+   cp infrastructure/nixos/hosts/misato/* infrastructure/nixos/hosts/<node>/
    ```
 
-2. **Customize Hardware Configuration**
+2. **Customize  Configuration**
    ```bash
-   nixos-generate-config --show-hardware-config > infrastructure/nixos/hosts/new-node/hardware-configuration.nix
+   nvim infrastructure/nixos/hosts/<node>/<*>
    ```
 
 3. **Deploy New Node**
    ```bash
-   nixos-anywhere --flake ./nixos#new-node root@<new-node-ip>
+   nixos-anywhere --flake ./nixos#<node> root@<ip>
    ```
 
 ### **Service Configuration**

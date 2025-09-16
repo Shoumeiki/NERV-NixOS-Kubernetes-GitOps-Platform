@@ -32,16 +32,6 @@ nix profile install nixpkgs#age nixpkgs#sops
 cd infrastructure/nixos && nix develop
 ```
 
-### **Target Hardware Requirements**
-
-| Requirement | Minimum | Recommended | Purpose |
-|-------------|---------|-------------|---------|
-| **Architecture** | x86_64 | x86_64 | NixOS and container compatibility |
-| **Boot** | UEFI | UEFI | Modern boot security features |
-| **Memory** | 4GB | 8GB+ | Kubernetes + applications |
-| **Storage** | 32GB SSD | 256GB+ SSD | System + container images + volumes |
-| **Network** | Ethernet | Gigabit Ethernet | Cluster communication and external access |
-
 ---
 
 ## **Deployment Process**
@@ -76,8 +66,8 @@ cd infrastructure/nixos && nix develop
 
 1. **Clone Platform Repository**
    ```bash
-   git clone https://github.com/Shoumeiki/NERV-NixOS-Kubernetes-GitOps-Platform.git
-   cd NERV-NixOS-Kubernetes-GitOps-Platform
+   git clone https://github.com/Shoumeiki/NERV-NixOS-Kubernetes-GitOps-Platform.git nerv-deploy
+   cd nerv-deploy
    ```
 
 2. **Configure Secret Management**
@@ -100,7 +90,7 @@ cd infrastructure/nixos && nix develop
    nix flake check
 
    # Test build configuration locally (optional)
-   nixos-rebuild build --flake .#misato
+   nixos-rebuild build --flake .#<node>
    ```
 
 ### **Phase 3: Automated Deployment**
@@ -111,32 +101,14 @@ cd infrastructure/nixos && nix develop
    mkdir -p ~/secrets/var/lib/sops-nix
    cp ~/.config/sops/age/keys.txt ~/secrets/var/lib/sops-nix/key.txt
    chmod 600 ~/secrets/var/lib/sops-nix/key.txt
-
-   # Verify secret file integrity
-   file ~/secrets/var/lib/sops-nix/key.txt
    ```
 
 2. **Execute One-Command Deployment**
    ```bash
    nixos-anywhere --extra-files ~/secrets \
-                  --flake ./infrastructure/nixos#misato \
+                  --flake ./infrastructure/nixos#<node> \
                   root@<target-ip>
    ```
-
-### **Deployment Process Overview**
-
-The automated deployment performs these operations **in sequence**:
-
-| Phase | Duration | Operations |
-|-------|----------|------------|
-| **System Preparation** | 2-3 min | Disk partitioning, filesystem creation |
-| **NixOS Installation** | 5-8 min | Base system + packages installation |
-| **Security Configuration** | 1-2 min | User creation, SSH hardening, secret decryption |
-| **Kubernetes Bootstrap** | 3-5 min | K3s cluster initialization |
-| **Platform Services** | 2-4 min | ArgoCD, MetalLB, ingress, storage |
-| **GitOps Activation** | 1-2 min | Repository connection, synchronization |
-
-**Total Deployment Time**: Approximately **10-15 minutes** for complete infrastructure
 
 ### **Phase 4: Post-Deployment Verification**
 
