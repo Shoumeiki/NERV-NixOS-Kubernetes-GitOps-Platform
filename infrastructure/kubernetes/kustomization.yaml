@@ -3,15 +3,27 @@
 # NERV Platform Root Kustomization
 #
 # This serves as the entry point for Flux v2 GitOps deployment.
-# All resources are organized through the flux-system kustomization
-# to ensure proper dependency ordering and avoid resource conflicts.
+# Resources are deployed in dependency order to ensure proper startup.
 
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# Reference the organized flux-system kustomization
+# Resource deployment order - dependencies first
 resources:
-  - flux-system/kustomization.yaml
+  # 1. FOUNDATION: Helm repositories for chart sources
+  - sources/helm-repositories.yaml
+
+  # 2. NETWORKING: Load balancer and IP allocation
+  - releases/metallb/helmrelease.yaml
+
+  # 3. CERTIFICATES: TLS certificate management
+  - releases/cert-manager/helmrelease.yaml
+
+  # 4. INGRESS: HTTP/HTTPS traffic routing
+  - releases/traefik/helmrelease.yaml
+
+  # 5. STORAGE: Persistent volume management
+  - releases/longhorn/helmrelease.yaml
 
 # Labels for GitOps tracking
 commonLabels:
