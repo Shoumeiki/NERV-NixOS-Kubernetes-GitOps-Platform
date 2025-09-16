@@ -90,8 +90,5 @@ in
   config = mkIf cfg.enable {
     # Note: Longhorn will be deployed via ArgoCD using Helm charts
     # This module provides configuration values for the deployment
-    
-    # Update network configuration to include Longhorn UI IP
-    nerv.network.services.longhorn = cfg.ui.loadBalancerIP;
   };
 }

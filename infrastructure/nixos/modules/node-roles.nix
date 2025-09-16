@@ -73,11 +73,26 @@ in
         description = "Eligible for MetalLB load balancer services";
       };
     };
+
+    # Internal options for node configuration
+    nodeLabels = mkOption {
+      type = types.attrs;
+      internal = true;
+      readOnly = true;
+      description = "Kubernetes node labels for scheduling";
+    };
+
+    nodeTaints = mkOption {
+      type = types.listOf types.attrs;
+      internal = true;
+      readOnly = true;
+      description = "Kubernetes node taints for workload isolation";
+    };
   };
 
   config = {
     # Export node labels for Kubernetes scheduling
-    nerv.nodeLabels = {
+    nerv.nodeRole.nodeLabels = {
       "nerv.io/role" = cfg.role;
       "nerv.io/hardware-profile" = cfg.hardwareProfile;
       "nerv.io/storage-tier" = cfg.storage.tier;
@@ -86,7 +101,7 @@ in
     };
 
     # Export node taints for workload isolation
-    nerv.nodeTaints = mkIf (cfg.role == "storage") [
+    nerv.nodeRole.nodeTaints = mkIf (cfg.role == "storage") [
       {
         key = "nerv.io/storage-only";
         value = "true";

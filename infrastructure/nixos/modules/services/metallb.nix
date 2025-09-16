@@ -42,7 +42,7 @@ in
               namespace = cfg.namespace;
             };
             spec = {
-              addresses = [ networkCfg.calculatedValues.metallbAddressRange ];
+              addresses = [ "${networkCfg.loadBalancerPool.start}-${networkCfg.loadBalancerPool.end}" ];
             };
           }
           {

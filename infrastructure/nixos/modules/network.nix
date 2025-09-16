@@ -69,11 +69,4 @@ in
       };
     };
   };
-
-  config = {
-    # Export calculated values for use by other modules
-    nerv.network.calculatedValues = {
-      metallbAddressRange = "${cfg.loadBalancerPool.start}-${cfg.loadBalancerPool.end}";
-    };
-  };
 }
