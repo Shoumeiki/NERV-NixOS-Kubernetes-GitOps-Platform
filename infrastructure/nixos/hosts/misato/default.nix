@@ -6,10 +6,25 @@
 {
   imports = [ ./disko.nix ];
 
+  # Node identity and role
   networking = {
     hostName = "misato";
     useDHCP = lib.mkDefault true;
     wireless.enable = false;
+  };
+
+  # Node role configuration for scalable architecture
+  nerv.nodeRole = {
+    role = "control-plane";
+    hardwareProfile = "mini-pc";
+    storage = {
+      allowScheduling = true;  # Allow Longhorn on control plane for single-node
+      tier = "standard";
+    };
+    compute = {
+      allowWorkloads = true;   # Allow workloads on control plane for single-node
+      maxPods = 100;
+    };
   };
 
   boot = {
@@ -17,7 +32,6 @@
       availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usb_storage" "sd_mod" ];
       kernelModules = [ ];
     };
-
     kernelModules = [ "kvm-intel" ];
     extraModulePackages = [ ];
     kernelParams = [ "i915.enable_guc=2" ];
@@ -29,21 +43,19 @@
   };
 
   hardware = {
-    # Intel graphics for compute workloads
     graphics = {
       enable = true;
       enable32Bit = true;
       extraPackages = with pkgs; [
-        intel-media-driver    # Intel GPU driver
+        intel-media-driver
         libvdpau-va-gl
-        intel-compute-runtime # OpenCL support
-        level-zero            # Intel compute API
+        intel-compute-runtime
+        level-zero
       ];
     };
-
     cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
     enableRedistributableFirmware = true;
-    bluetooth.enable = false;  # Power saving
+    bluetooth.enable = false;
   };
 
   powerManagement = {
@@ -52,183 +64,37 @@
   };
 
   services = {
-    thermald.enable = true;  # Intel thermal management
-
-    # K3s Kubernetes cluster
+    thermald.enable = true;
     k3s = {
       enable = true;
-      role = "server";  # This node is a control plane
-      clusterInit = true;  # Initialize new cluster
+      role = "server";
+      clusterInit = true;
       tokenFile = config.sops.secrets."k3s/token".path;
       
-      # Install core components automatically
       extraFlags = toString [
-        "--disable=traefik"  # We'll use our own ingress setup
-        "--disable=servicelb"  # We'll use MetalLB instead
+        "--disable=traefik"
+        "--disable=servicelb"
       ];
+    };
+
+    nerv = {
+      argocd = {
+        enable = true;
+        loadBalancerIP = config.nerv.network.services.argocd;
+        repositoryUrl = config.nerv.network.repository.url;
+      };
       
-      # Install ArgoCD and MetalLB via manifests
-      manifests = {
-        argocd = {
-          source = pkgs.fetchurl {
-            url = "https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml";
-            sha256 = "sha256-IQ5P36aTTbzCGhWX1uUA3r4pdlE7dlF/3TH4344LlsQ=";
-          };
-        };
-        metallb = {
-          source = pkgs.fetchurl {
-            url = "https://raw.githubusercontent.com/metallb/metallb/v0.14.8/config/manifests/metallb-native.yaml";
-            sha256 = "sha256-EbWQYCH95WBAzxDRvLr1wrekIGBF67EDkVNH38xTPw4=";
-          };
-        };
-        metallb-config = {
-          content = [
-            {
-              apiVersion = "metallb.io/v1beta1";
-              kind = "IPAddressPool";
-              metadata = {
-                name = "nerv-pool";
-                namespace = "metallb-system";
-              };
-              spec = {
-                addresses = [ "192.168.1.110-192.168.1.150" ];
-              };
-            }
-            {
-              apiVersion = "metallb.io/v1beta1";
-              kind = "L2Advertisement";
-              metadata = {
-                name = "nerv-l2";
-                namespace = "metallb-system";
-              };
-              spec = {
-                ipAddressPools = [ "nerv-pool" ];
-              };
-            }
-          ];
-        };
-        argocd-loadbalancer = {
-          content = {
-            apiVersion = "v1";
-            kind = "Service";
-            metadata = {
-              name = "argocd-server-lb";
-              namespace = "default";
-              annotations = {
-                "metallb.universe.tf/loadBalancerIPs" = "192.168.1.110";
-              };
-            };
-            spec = {
-              type = "LoadBalancer";
-              ports = [
-                {
-                  name = "server";
-                  port = 80;
-                  targetPort = 8080;
-                  protocol = "TCP";
-                }
-                {
-                  name = "grpc";
-                  port = 443;
-                  targetPort = 8080;
-                  protocol = "TCP";
-                }
-              ];
-              selector = {
-                "app.kubernetes.io/name" = "argocd-server";
-              };
-            };
-          };
-        };
-        argocd-server-insecure = {
-          content = {
-            apiVersion = "apps/v1";
-            kind = "Deployment";
-            metadata = {
-              name = "argocd-server";
-              namespace = "default";
-            };
-            spec = {
-              template = {
-                spec = {
-                  containers = [
-                    {
-                      name = "argocd-server";
-                      args = [
-                        "argocd-server"
-                        "--insecure"
-                      ];
-                    }
-                  ];
-                };
-              };
-            };
-          };
-        };
-        argocd-rbac-controller = {
-          content = {
-            apiVersion = "rbac.authorization.k8s.io/v1";
-            kind = "ClusterRoleBinding";
-            metadata = {
-              name = "argocd-application-controller-admin";
-            };
-            roleRef = {
-              apiGroup = "rbac.authorization.k8s.io";
-              kind = "ClusterRole";
-              name = "cluster-admin";
-            };
-            subjects = [
-              {
-                kind = "ServiceAccount";
-                name = "argocd-application-controller";
-                namespace = "default";
-              }
-            ];
-          };
-        };
-        argocd-rbac-server = {
-          content = {
-            apiVersion = "rbac.authorization.k8s.io/v1";
-            kind = "ClusterRoleBinding";
-            metadata = {
-              name = "argocd-server-admin";
-            };
-            roleRef = {
-              apiGroup = "rbac.authorization.k8s.io";
-              kind = "ClusterRole";
-              name = "cluster-admin";
-            };
-            subjects = [
-              {
-                kind = "ServiceAccount";
-                name = "argocd-server";
-                namespace = "default";
-              }
-            ];
-          };
-        };
-        argocd-repository = {
-          content = {
-            apiVersion = "v1";
-            kind = "Secret";
-            metadata = {
-              name = "nerv-repository";
-              namespace = "default";
-              labels = {
-                "argocd.argoproj.io/secret-type" = "repository";
-              };
-            };
-            type = "Opaque";
-            stringData = {
-              type = "git";
-              url = "https://github.com/Shoumeiki/NERV-NixOS-Kubernetes-GitOps-Platform.git";
-            };
-          };
-        };
+      metallb = {
+        enable = true;
+      };
+
+      longhorn = {
+        enable = true;
+        singleNodeMode = true;  # Will scale to multi-node automatically
+        ui.loadBalancerIP = config.nerv.network.services.longhorn;
       };
     };
 
-    # Disable desktop services
     xserver.enable = false;
     printing.enable = false;
     pipewire.enable = false;
@@ -238,43 +104,41 @@
   };
 
   systemd = {
-    # Automatically set up kubectl access for Ellen
-    services.setup-ellen-kubeconfig = {
-      description = "Setup kubectl access for Ellen";
-      wantedBy = [ "multi-user.target" ];
-      after = [ "k3s.service" ];
-      serviceConfig = {
-        Type = "oneshot";
-        RemainAfterExit = true;
-        ExecStart = "${pkgs.bash}/bin/bash ${../common/scripts/setup-kubeconfig.sh}";
+    services = {
+      setup-ellen-kubeconfig = {
+        description = "Setup kubectl access for Ellen";
+        wantedBy = [ "multi-user.target" ];
+        after = [ "k3s.service" ];
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+          ExecStart = "${pkgs.bash}/bin/bash ${../common/scripts/setup-kubeconfig.sh}";
+        };
+      };
+
+      bootstrap-nerv-gitops = {
+        description = "Bootstrap NERV GitOps Platform";
+        wantedBy = [ "multi-user.target" ];
+        after = [ "k3s.service" "setup-ellen-kubeconfig.service" ];
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+          ExecStart = "${pkgs.bash}/bin/bash ${../common/scripts/bootstrap-gitops.sh}";
+          Environment = [
+            "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
+            "PATH=${pkgs.kubectl}/bin:${pkgs.bash}/bin:${pkgs.coreutils}/bin:${pkgs.gnugrep}/bin:/run/wrappers/bin"
+          ];
+          User = "root";
+          Group = "root";
+        };
       };
     };
 
-    # Bootstrap complete GitOps platform
-    services.bootstrap-nerv-gitops = {
-      description = "Bootstrap NERV GitOps Platform";
-      wantedBy = [ "multi-user.target" ];
-      after = [ "k3s.service" "setup-ellen-kubeconfig.service" ];
-      serviceConfig = {
-        Type = "oneshot";
-        RemainAfterExit = true;
-        ExecStart = "${pkgs.bash}/bin/bash ${../common/scripts/bootstrap-gitops.sh}";
-        Environment = [
-          "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
-          "PATH=${pkgs.kubectl}/bin:${pkgs.bash}/bin:${pkgs.coreutils}/bin:${pkgs.gnugrep}/bin:/run/wrappers/bin"
-        ];
-        User = "root";
-        Group = "root";
-      };
-    };
-
-    # No sleep for servers
     sleep.extraConfig = ''
       AllowSuspend=no
       AllowHibernation=no
     '';
 
-    # Faster timeouts
     extraConfig = ''
       DefaultTimeoutStopSec=30s
       DefaultTimeoutStartSec=30s

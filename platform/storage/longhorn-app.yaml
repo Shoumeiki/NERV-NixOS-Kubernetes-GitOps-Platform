@@ -1,0 +1,89 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: longhorn
+  namespace: default
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://charts.longhorn.io
+    chart: longhorn
+    targetRevision: "1.7.2"
+    helm:
+      values: |
+        # Single-node development configuration
+        # Scales automatically to multi-node production
+        
+        defaultSettings:
+          # Storage configuration for mixed hardware support
+          defaultReplicaCount: 1
+          storageOverProvisioningPercentage: 200
+          storageMinimalAvailablePercentage: 25
+          
+          # Node scheduling - allow master for single-node
+          taintToleration: "CriticalAddonsOnly=true:NoSchedule"
+          systemManagedComponentsNodeSelector: "longhorn.io/create-default-disk:true"
+          
+          # Backup and DR preparation
+          backupTarget: ""  # Configure when backup storage available
+          backupTargetCredentialSecret: ""
+          
+          # Security and access
+          createDefaultDiskLabeledNodes: true
+          defaultDataLocality: "best-effort"
+          
+        # Service configuration
+        service:
+          ui:
+            type: LoadBalancer
+            loadBalancerIP: "192.168.1.111"
+            port: 80
+            
+        # Resource configuration for energy efficiency
+        longhornManager:
+          resources:
+            limits:
+              cpu: 200m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+              
+        longhornDriver:
+          resources:
+            limits:
+              cpu: 200m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+              
+        # Storage classes for different tiers
+        persistence:
+          defaultClass: true
+          defaultClassReplicaCount: 1
+          reclaimPolicy: Retain
+          
+        # Monitoring integration ready
+        serviceMonitor:
+          enabled: false  # Enable when Prometheus deployed
+          
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: longhorn-system
+    
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

@@ -4,7 +4,6 @@
 { pkgs, lib, ... }:
 
 let
-  # Auto-detect primary storage device
   primaryDisk = lib.removeSuffix "\n" (builtins.readFile (
     pkgs.runCommand "detect-primary-disk" {} ''
       ${pkgs.bash}/bin/bash ${../common/scripts/detect-primary-disk.sh} > $out
@@ -17,7 +16,7 @@ in
     disk = {
       main = {
         type = "disk";
-        device = primaryDisk;  # Auto-detected storage device
+        device = primaryDisk;
         content = {
           type = "gpt";
           partitions = {

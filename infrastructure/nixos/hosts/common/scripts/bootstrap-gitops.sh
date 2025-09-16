@@ -74,7 +74,7 @@ spec:
 EOF
 
 echo "GitOps platform bootstrap completed successfully"
-echo "ArgoCD UI: http://192.168.1.110"
+echo "ArgoCD UI: http://192.168.1.110"  # IP from network.nix LoadBalancer config
 echo "Username: admin"
 if [[ -f "$ADMIN_PASSWORD_FILE" ]] && [[ -s "$ADMIN_PASSWORD_FILE" ]]; then
     echo "Password: configured via SOPS"

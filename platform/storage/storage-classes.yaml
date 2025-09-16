@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: longhorn-storage-classes
+  namespace: longhorn-system
+data:
+  storage-classes.yaml: |
+    # Fast storage class for high-performance workloads
+    apiVersion: storage.k8s.io/v1
+    kind: StorageClass
+    metadata:
+      name: longhorn-fast
+      annotations:
+        storageclass.kubernetes.io/is-default-class: "false"
+    provisioner: driver.longhorn.io
+    allowVolumeExpansion: true
+    reclaimPolicy: Retain
+    volumeBindingMode: Immediate
+    parameters:
+      numberOfReplicas: "1"  # Scales to 3 in multi-node
+      staleReplicaTimeout: "2880"
+      fromBackup: ""
+      fsType: "ext4"
+      dataLocality: "best-effort"
+    
+    ---
+    # Standard storage class for general workloads  
+    apiVersion: storage.k8s.io/v1
+    kind: StorageClass
+    metadata:
+      name: longhorn-standard
+      annotations:
+        storageclass.kubernetes.io/is-default-class: "true"
+    provisioner: driver.longhorn.io
+    allowVolumeExpansion: true
+    reclaimPolicy: Retain
+    volumeBindingMode: Immediate
+    parameters:
+      numberOfReplicas: "1"  # Scales to 2 in multi-node
+      staleReplicaTimeout: "2880"
+      fromBackup: ""
+      fsType: "ext4"
+      dataLocality: "disabled"
+    
+    ---
+    # Backup storage class for long-term retention
+    apiVersion: storage.k8s.io/v1
+    kind: StorageClass
+    metadata:
+      name: longhorn-backup
+      annotations:
+        storageclass.kubernetes.io/is-default-class: "false"
+    provisioner: driver.longhorn.io
+    allowVolumeExpansion: true
+    reclaimPolicy: Retain
+    volumeBindingMode: WaitForFirstConsumer
+    parameters:
+      numberOfReplicas: "1"  # Scales to 3 in multi-node
+      staleReplicaTimeout: "2880"
+      fromBackup: ""
+      fsType: "ext4"
+      dataLocality: "disabled"
+      recurringJobSelector: '[{"name":"backup", "isGroup":true}]'
