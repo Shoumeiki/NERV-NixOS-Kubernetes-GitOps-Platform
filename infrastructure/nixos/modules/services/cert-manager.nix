@@ -76,7 +76,7 @@ in
       cert-manager-manifests = {
         source = pkgs.fetchurl {
           url = "https://github.com/cert-manager/cert-manager/releases/download/v1.18.2/cert-manager.yaml";
-          sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";  # To be updated
+          sha256 = "sha256-BUa2S8gGI3iFzMgONFvOFYXrLsL0dqevWT8DCr2zoW8=";
         };
       };
 
