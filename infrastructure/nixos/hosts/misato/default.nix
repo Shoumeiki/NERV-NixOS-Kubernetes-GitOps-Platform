@@ -32,7 +32,15 @@
       availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usb_storage" "sd_mod" ];
       kernelModules = [ ];
     };
-    kernelModules = [ "kvm-intel" ];
+    kernelModules = [ 
+      "kvm-intel"
+      # Storage modules for Longhorn
+      "iscsi_tcp"          # iSCSI over TCP
+      "nfs"                # NFS client support
+      "nfsd"               # NFS server support (for RWX)
+      "dm_crypt"           # Device mapper crypto
+      "dm_mod"             # Device mapper
+    ];
     extraModulePackages = [ ];
     kernelParams = [ "i915.enable_guc=2" ];
     kernel.sysctl = {

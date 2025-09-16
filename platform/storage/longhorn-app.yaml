@@ -92,6 +92,9 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
+            # NixOS PATH workaround for binary access
+            - name: PATH
+              value: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/run/current-system/sw/bin"
           resources:
             limits:
               cpu: 200m
