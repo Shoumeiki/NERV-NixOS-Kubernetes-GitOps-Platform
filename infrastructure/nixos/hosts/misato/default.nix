@@ -180,6 +180,34 @@
     power-profiles-daemon.enable = false;      # Manual power management
   };
 
+  # NERV PLATFORM SERVICES: Flux v2 GitOps-managed infrastructure stack
+  nerv = {
+    # GITOPS FOUNDATION: Flux v2 for declarative infrastructure management
+    flux = {
+      enable = true;
+      repository = {
+        url = config.nerv.network.repository.url;
+        branch = "main";
+        path = "infrastructure/kubernetes";
+      };
+      namespace = "flux-system";
+      interval = "1m";
+    };
+
+    # NOTE: All other services (MetalLB, Traefik, cert-manager, Longhorn) are now
+    # managed through Flux v2 GitOps using official Helm charts. This provides:
+    # - Better maintainability with upstream chart updates
+    # - Reduced complexity in NixOS configuration
+    # - Standardized deployment patterns
+    # - Web UI access for all services (dashboard management)
+    #
+    # Services will be automatically deployed via:
+    # - infrastructure/kubernetes/releases/metallb/
+    # - infrastructure/kubernetes/releases/traefik/
+    # - infrastructure/kubernetes/releases/cert-manager/
+    # - infrastructure/kubernetes/releases/longhorn/
+  };
+
   # SYSTEMD AUTOMATION: Bootstrap services for cluster initialization
   systemd = {
     services = {
