@@ -36,8 +36,8 @@ in
       # ArgoCD core installation
       argocd = {
         source = pkgs.fetchurl {
-          url = "https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml";
-          sha256 = "sha256-IQ5P36aTTbzCGhWX1uUA3r4pdlE7dlF/3TH4344LlsQ=";
+          url = "https://raw.githubusercontent.com/argoproj/argo-cd/v3.1.5/manifests/install.yaml";
+          sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";  # Will be updated on rebuild
         };
       };
 
