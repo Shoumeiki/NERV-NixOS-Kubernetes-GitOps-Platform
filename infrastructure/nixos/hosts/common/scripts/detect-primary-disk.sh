@@ -60,13 +60,13 @@ is_removable() {
     fi
 }
 
-echo "NERV Storage Detection - Analyzing available storage devices..."
+echo "NERV Storage Detection - Analyzing available storage devices..." >&2
 
 # SELECTION VARIABLES: Track best candidate device and its properties
 primary_disk=""      # Path to selected primary storage device
 max_size=0          # Size of largest suitable device found
 
-echo "Phase 1: Analyzing persistent device identifiers..."
+echo "Phase 1: Analyzing persistent device identifiers..." >&2
 
 # PERSISTENT DEVICE ENUMERATION: Prefer stable device identifiers over dynamic names
 # /dev/disk/by-id provides stable device names that persist across reboots
@@ -85,12 +85,12 @@ for id_path in /dev/disk/by-id/ata-* /dev/disk/by-id/nvme-*; do
     # by-id entries are symlinks to the actual device files in /dev
     actual_device=$(readlink -f "$id_path")
 
-    echo "Evaluating: $(basename "$id_path")"
+    echo "Evaluating: $(basename "$id_path")" >&2
 
     # REMOVABLE DEVICE FILTERING: Skip USB drives and removable media
     # Critical safety measure to prevent accidental formatting
     if is_removable "$actual_device"; then
-        echo "Skipped - Removable device (USB/external)"
+        echo "Skipped - Removable device (USB/external)" >&2
         continue
     fi
 
@@ -98,23 +98,23 @@ for id_path in /dev/disk/by-id/ata-* /dev/disk/by-id/nvme-*; do
     size=$(get_disk_size "$actual_device")
     size_gb=$((size / 1000000000))  # Convert to GB for human readability
 
-    echo "Size: ${size_gb}GB"
+    echo "Size: ${size_gb}GB" >&2
 
     # LARGEST DEVICE SELECTION: Choose device with maximum capacity
     # Assumes primary storage is typically the largest internal device
     if (( size > max_size )); then
         max_size=$size
         primary_disk="$id_path"
-        echo "New primary candidate selected"
+        echo "New primary candidate selected" >&2
     else
-        echo "Smaller than current candidate"
+        echo "Smaller than current candidate" >&2
     fi
 done
 
 # FALLBACK ENUMERATION: Direct device path scanning for compatibility
 # Some systems or virtualization platforms may not populate /dev/disk/by-id
 if [[ -z "$primary_disk" ]]; then
-    echo "Phase 2: Fallback to direct device enumeration..."
+    echo "Phase 2: Fallback to direct device enumeration..." >&2
 
     # COMMON DEVICE PATTERNS: Standard Linux block device naming conventions
     # nvme0n1: NVMe SSD (modern systems)
@@ -124,11 +124,11 @@ if [[ -z "$primary_disk" ]]; then
         # DEVICE EXISTENCE CHECK: Verify block device exists
         [[ -b "$device" ]] || continue
 
-        echo "Evaluating: $(basename "$device")"
+        echo "Evaluating: $(basename "$device")" >&2
 
         # REMOVABLE SAFETY CHECK: Apply same safety filtering as by-id detection
         if is_removable "$device"; then
-            echo "Skipped - Removable device"
+            echo "Skipped - Removable device" >&2
             continue
         fi
 
@@ -136,40 +136,40 @@ if [[ -z "$primary_disk" ]]; then
         size=$(get_disk_size "$device")
         size_gb=$((size / 1000000000))
 
-        echo "Size: ${size_gb}GB"
+        echo "Size: ${size_gb}GB" >&2
 
         if (( size > max_size )); then
             max_size=$size
             primary_disk="$device"
-            echo "New primary candidate selected"
+            echo "New primary candidate selected" >&2
         else
-            echo "Smaller than current candidate"
+            echo "Smaller than current candidate" >&2
         fi
     done
 fi
 
-echo "Storage Device Selection Complete"
+echo "Storage Device Selection Complete" >&2
 
 # SUCCESSFUL DETECTION: Report selected device with details
 if [[ -n "$primary_disk" ]] && (( max_size > 0 )); then
     selected_size_gb=$((max_size / 1000000000))
 
-    echo "Primary storage device selected:"
-    echo "   • Device: $primary_disk"
-    echo "   • Capacity: ${selected_size_gb}GB"
-    echo "   • Type: $(if [[ "$primary_disk" =~ nvme ]]; then echo "NVMe SSD"; elif [[ "$primary_disk" =~ ata ]]; then echo "SATA"; else echo "Block Device"; fi)"
+    echo "Primary storage device selected:" >&2
+    echo "   • Device: $primary_disk" >&2
+    echo "   • Capacity: ${selected_size_gb}GB" >&2
+    echo "   • Type: $(if [[ "$primary_disk" =~ nvme ]]; then echo "NVMe SSD"; elif [[ "$primary_disk" =~ ata ]]; then echo "SATA"; else echo "Block Device"; fi)" >&2
 
     # OUTPUT RESULT: Provide device path for disko configuration
     echo "$primary_disk"
 
 else
     # DETECTION FAILURE HANDLING: Provide safe fallback with warning
-    echo "WARNING: No suitable storage device detected"
-    echo "   Using fallback device: /dev/sda"
-    echo "   Manual verification recommended before deployment"
+    echo "WARNING: No suitable storage device detected" >&2
+    echo "   Using fallback device: /dev/sda" >&2
+    echo "   Manual verification recommended before deployment" >&2
 
     # FALLBACK OUTPUT: Default to /dev/sda (most common device name)
     echo "/dev/sda"
 fi
 
-echo "Device path ready for disko configuration integration"
+echo "Device path ready for disko configuration integration" >&2
