@@ -19,6 +19,9 @@ resources:
   # 3. NETWORKING: Load balancer and IP allocation
   - releases/metallb/helmrelease.yaml
 
+  # 3b. METALLB CONFIGURATION: IP pool (after MetalLB CRDs exist)
+  - metallb-config.yaml
+
   # 4. CERTIFICATES: TLS certificate management
   - releases/cert-manager/helmrelease.yaml
 
