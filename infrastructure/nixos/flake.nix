@@ -82,11 +82,11 @@
           ./modules/node-roles.nix   # Kubernetes node role management and workload scheduling
 
           # PLATFORM SERVICE MODULES: Complete Kubernetes infrastructure stack
-          ./modules/services/argocd-enterprise.nix     # GitOps controller with enterprise security
-          ./modules/services/metallb.nix               # Bare metal load balancer for external access
-          ./modules/services/longhorn-simple.nix       # Distributed storage for persistent workloads
-          ./modules/services/traefik-simple.nix        # Ingress controller with TLS termination
-          ./modules/services/cert-manager-simple.nix   # Automated certificate management
+          ./modules/services/argocd.nix           # GitOps controller with enterprise security
+          ./modules/services/metallb.nix          # Bare metal load balancer for external access
+          ./modules/services/longhorn.nix         # Distributed storage for persistent workloads
+          ./modules/services/traefik.nix          # Ingress controller with TLS termination
+          ./modules/services/cert-manager.nix     # Automated certificate management
 
           # NODE-SPECIFIC CONFIGURATIONS: Hardware profiles and secrets
           ./hosts/common/secrets.nix # SOPS encrypted credential management
