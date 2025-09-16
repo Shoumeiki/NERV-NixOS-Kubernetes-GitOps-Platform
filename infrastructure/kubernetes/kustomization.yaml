@@ -1,0 +1,24 @@
+# infrastructure/kubernetes/kustomization.yaml
+#
+# NERV Platform Root Kustomization
+#
+# This serves as the entry point for Flux v2 GitOps deployment.
+# All resources are organized through the flux-system kustomization
+# to ensure proper dependency ordering and avoid resource conflicts.
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Reference the organized flux-system kustomization
+resources:
+  - flux-system/kustomization.yaml
+
+# Labels for GitOps tracking
+commonLabels:
+  app.kubernetes.io/managed-by: flux
+  app.kubernetes.io/part-of: nerv-platform
+
+# Annotations for resource management
+commonAnnotations:
+  config.kubernetes.io/local-config: "false"
+  fluxcd.io/managed: "true"
