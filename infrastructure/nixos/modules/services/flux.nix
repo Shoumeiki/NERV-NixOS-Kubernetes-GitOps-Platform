@@ -60,7 +60,12 @@ in
             name = cfg.namespace;
             labels = {
               "app.kubernetes.io/name" = "flux-system";
+              "app.kubernetes.io/component" = "gitops";
+              "app.kubernetes.io/part-of" = "flux";
+              # Flux controllers can run with restricted security
               "pod-security.kubernetes.io/enforce" = "restricted";
+              "pod-security.kubernetes.io/audit" = "restricted";
+              "pod-security.kubernetes.io/warn" = "restricted";
             };
           };
         };
@@ -68,8 +73,8 @@ in
 
       flux-system-install = {
         source = pkgs.fetchurl {
-          url = "https://github.com/fluxcd/flux2/releases/download/v2.4.0/install.yaml";
-          sha256 = "sha256-OsoN5gSTLfljLGzI51Ioc9Fs3WIdHevPkSk1iabUGv4=";
+          url = "https://github.com/fluxcd/flux2/releases/download/v2.6.1/install.yaml";
+          sha256 = ""; # Hash will be calculated during build
         };
       };
 

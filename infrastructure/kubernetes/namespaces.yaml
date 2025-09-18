@@ -1,4 +1,4 @@
-# Platform service namespaces
+# Platform service namespaces with Pod Security Standards
 
 ---
 apiVersion: v1
@@ -9,6 +9,10 @@ metadata:
     app.kubernetes.io/name: metallb-system
     app.kubernetes.io/component: networking
     app.kubernetes.io/part-of: nerv-platform
+    # MetalLB needs privileged access for networking operations
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
 
 ---
 apiVersion: v1
@@ -19,6 +23,10 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/component: certificates
     app.kubernetes.io/part-of: nerv-platform
+    # cert-manager can run with baseline security
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
 
 ---
 apiVersion: v1
@@ -29,6 +37,10 @@ metadata:
     app.kubernetes.io/name: traefik-system
     app.kubernetes.io/component: ingress
     app.kubernetes.io/part-of: nerv-platform
+    # Traefik needs baseline for network binding capabilities
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
 
 ---
 apiVersion: v1
@@ -39,3 +51,7 @@ metadata:
     app.kubernetes.io/name: longhorn-system
     app.kubernetes.io/component: storage
     app.kubernetes.io/part-of: nerv-platform
+    # Longhorn needs privileged access for storage operations
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
