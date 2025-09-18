@@ -1,10 +1,4 @@
-# infrastructure/kubernetes/releases/metallb/helmrelease.yaml
-#
-# NERV MetalLB Load Balancer Configuration
-#
-# MetalLB provides LoadBalancer services for bare metal Kubernetes clusters.
-# This configuration establishes the foundation for external service access
-# using the NERV platform IP allocation strategy (192.168.1.111-150).
+# MetalLB load balancer configuration
 
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
@@ -20,7 +14,7 @@ spec:
   chart:
     spec:
       chart: metallb
-      version: "0.14.8"  # Stable version for production use
+      version: "0.14.8"
       sourceRef:
         kind: HelmRepository
         name: metallb
@@ -33,7 +27,6 @@ spec:
     remediation:
       retries: 3
   values:
-    # MetalLB Controller Configuration
     controller:
       image:
         repository: quay.io/metallb/controller
@@ -45,7 +38,6 @@ spec:
       nodeSelector:
         node-role.kubernetes.io/control-plane: "true"
 
-    # MetalLB Speaker Configuration
     speaker:
       image:
         repository: quay.io/metallb/speaker

@@ -1,9 +1,4 @@
-# infrastructure/kubernetes/namespaces.yaml
-#
-# NERV Platform Service Namespaces
-#
-# Explicit namespace creation to ensure proper dependency ordering.
-# These namespaces must exist before HelmReleases can be validated.
+# Platform service namespaces
 
 ---
 apiVersion: v1

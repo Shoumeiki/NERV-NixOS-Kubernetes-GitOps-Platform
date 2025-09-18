@@ -1,10 +1,4 @@
-# infrastructure/kubernetes/releases/traefik/helmrelease.yaml
-#
-# NERV Traefik Ingress Controller Configuration
-#
-# Traefik serves as the primary ingress controller and reverse proxy for the
-# NERV platform. This configuration enables HTTP/HTTPS routing, automatic
-# TLS certificate management, and provides a dashboard for traffic monitoring.
+# Traefik ingress controller configuration
 
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
@@ -20,7 +14,7 @@ spec:
   chart:
     spec:
       chart: traefik
-      version: "32.1.1"  # Stable version for production use
+      version: "32.1.1"
       sourceRef:
         kind: HelmRepository
         name: traefik
@@ -33,23 +27,20 @@ spec:
     remediation:
       retries: 3
   values:
-    # Traefik Deployment Configuration
     deployment:
       enabled: true
       kind: Deployment
       replicas: 1
 
-    # Service Configuration with Static IP
     service:
       enabled: true
       type: LoadBalancer
-      loadBalancerIP: "192.168.1.112"  # Reserved IP for Traefik
+      loadBalancerIP: "192.168.1.112"
       annotations:
         metallb.universe.tf/loadBalancerIPs: "192.168.1.112"
       spec:
         externalTrafficPolicy: Local
 
-    # Traefik Configuration
     additionalArguments:
       - "--api.dashboard=true"
       - "--ping=true"
@@ -62,7 +53,6 @@ spec:
       - "--certificatesresolvers.letsencrypt.acme.email=shoumeiki@gmail.com"
       - "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json"
 
-    # Ports Configuration
     ports:
       web:
         port: 80
@@ -82,7 +72,6 @@ spec:
           default: true
         protocol: TCP
 
-    # Dashboard Configuration - Enable UI for management
     ingressRoute:
       dashboard:
         enabled: true
@@ -94,14 +83,12 @@ spec:
         tls:
           secretName: traefik-dashboard-tls
 
-    # Persistence for ACME certificates
     persistence:
       enabled: true
       name: traefik-data
       size: 1Gi
       path: /data
 
-    # Resource Management
     resources:
       requests:
         cpu: 100m
@@ -110,7 +97,6 @@ spec:
         cpu: 300m
         memory: 150Mi
 
-    # Node Placement
     nodeSelector:
       node-role.kubernetes.io/control-plane: "true"
     tolerations:
@@ -118,7 +104,6 @@ spec:
         operator: Exists
         effect: NoSchedule
 
-    # Security Context
     securityContext:
       capabilities:
         drop:

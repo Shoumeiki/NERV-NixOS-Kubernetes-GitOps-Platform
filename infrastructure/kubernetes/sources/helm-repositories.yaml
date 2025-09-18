@@ -1,10 +1,4 @@
-# infrastructure/kubernetes/sources/helm-repositories.yaml
-#
-# NERV Platform Helm Repository Sources
-#
-# This file defines the Helm repositories that Flux will monitor for charts.
-# Using official upstream repositories ensures security, reliability, and
-# access to the latest stable releases for each platform service.
+# Helm repository sources for platform services
 
 ---
 apiVersion: source.toolkit.fluxcd.io/v1beta2

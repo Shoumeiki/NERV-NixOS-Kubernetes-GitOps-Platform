@@ -1,12 +1,6 @@
-# infrastructure/kubernetes/metallb-config.yaml
-#
-# MetalLB Configuration - IP Pool and L2 Advertisement
-#
-# This configures MetalLB to provide LoadBalancer IPs for services.
-# Must be deployed AFTER MetalLB CRDs are available.
+# MetalLB IP pool and L2 advertisement configuration
 
 ---
-# MetalLB IP Address Pool Configuration
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
 metadata:
@@ -17,14 +11,10 @@ metadata:
     app.kubernetes.io/component: network
     app.kubernetes.io/part-of: nerv-platform
 spec:
-  # NERV Platform Service Pool: 192.168.1.111-150 (40 IPs available)
-  # - 192.168.1.111-120: Reserved for core platform services
-  # - 192.168.1.121-150: Dynamic allocation for applications
   addresses:
     - 192.168.1.111-192.168.1.150
 
 ---
-# Layer 2 Advertisement Configuration
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement
 metadata:

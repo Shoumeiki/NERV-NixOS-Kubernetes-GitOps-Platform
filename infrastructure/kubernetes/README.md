@@ -1,60 +1,42 @@
-# NERV Platform - Flux v2 GitOps Infrastructure
+# Kubernetes Manifests
 
-This directory contains the Kubernetes manifests managed by Flux v2 for the NERV platform. All infrastructure services are deployed using official Helm charts through GitOps workflows.
+Flux v2-managed Kubernetes manifests for platform services.
 
-## Architecture
+## Services
 
-### Service Deployment Order
-1. **Helm Repositories** - Chart sources for all services
-2. **MetalLB** - Load balancer with IP pool 192.168.1.111-150
-3. **cert-manager** - TLS certificate automation
-4. **Traefik** - Ingress controller with dashboard
-5. **Longhorn** - Distributed storage with management UI
+Deployment order:
+1. MetalLB - Load balancer (IP pool 192.168.1.111-150)
+2. cert-manager - TLS certificate automation  
+3. Traefik - Ingress controller
+4. Longhorn - Distributed storage
 
-### IP Allocation Strategy
-```
-192.168.1.100-110  │  Node Pool (Kubernetes hosts)
-192.168.1.111-120  │  Core Services (DNS, Traefik, Longhorn, etc.)
-192.168.1.121-150  │  Application Pool (Dynamic allocation)
-```
+## Access
 
-## Service Access
+| Service | IP | Dashboard |
+|---------|----|-----------| 
+| Traefik | 192.168.1.112 | `http://192.168.1.112:9000` |
+| Longhorn | 192.168.1.113 | `http://192.168.1.113` |
 
-| Service | IP Address | Web Dashboard | Purpose |
-|---------|------------|---------------|---------|
-| **DNS** | 192.168.1.111 | N/A | Network DNS resolution |
-| **Traefik** | 192.168.1.112 | `http://192.168.1.112:9000` | Ingress & routing |
-| **Longhorn** | 192.168.1.113 | `http://192.168.1.113` | Storage management |
-
-## Directory Structure
+## Structure
 
 ```
 infrastructure/kubernetes/
-├── flux-system/           # Flux configuration and kustomization
-├── sources/               # Helm repositories and Git sources
-└── releases/              # HelmRelease definitions
-    ├── metallb/          # Load balancer configuration
-    ├── cert-manager/     # TLS certificate management
-    ├── traefik/          # Ingress controller
-    └── longhorn/         # Distributed storage
+├── flux-system/           # Flux configuration
+├── sources/               # Helm repositories  
+└── releases/              # Service definitions
+    ├── metallb/
+    ├── cert-manager/
+    ├── traefik/
+    └── longhorn/
 ```
 
-## 🚀 Deployment Process
+## Deployment
 
-Flux automatically syncs these manifests from Git every minute. All services include:
-- **Official Helm charts** for better maintainability
-- **Web dashboards** for visual management
-- **Single-node tolerations** for control plane deployment
-- **Resource limits** for efficient resource usage
-- **Static IP allocation** for predictable access
-
-## Benefits of Flux v2 Approach
-
-- **Simplified Operations**: No complex custom NixOS modules
-- **Better Maintenance**: Upstream chart updates and security patches
-- **Dashboard Management**: Web UIs for all services eliminate SSH requirements
-- **GitOps Native**: Declarative infrastructure with Git workflow
-- **Scalability**: Proven patterns for platform engineering teams
+Flux syncs these manifests from Git automatically. Services use official Helm charts with:
+- Static IP allocation
+- Web dashboards 
+- Resource limits
+- Single-node tolerations
 
 ---
 

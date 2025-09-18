@@ -1,10 +1,4 @@
-# infrastructure/kubernetes/releases/cert-manager/helmrelease.yaml
-#
-# NERV cert-manager TLS Certificate Automation
-#
-# cert-manager automates the management and issuance of TLS certificates
-# from various issuing sources. This configuration enables automatic
-# certificate provisioning for HTTPS services throughout the NERV platform.
+# cert-manager configuration for TLS certificate automation
 
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
@@ -33,10 +27,8 @@ spec:
     remediation:
       retries: 3
   values:
-    # cert-manager Controller Configuration
     installCRDs: true
 
-    # Resource Management
     resources:
       requests:
         cpu: 10m
@@ -45,7 +37,6 @@ spec:
         cpu: 100m
         memory: 128Mi
 
-    # Node Placement - prefer control plane
     nodeSelector:
       node-role.kubernetes.io/control-plane: "true"
     tolerations:
@@ -53,7 +44,6 @@ spec:
         operator: Exists
         effect: NoSchedule
 
-    # Webhook Configuration
     webhook:
       resources:
         requests:
@@ -69,7 +59,6 @@ spec:
           operator: Exists
           effect: NoSchedule
 
-    # CA Injector Configuration
     cainjector:
       resources:
         requests:
