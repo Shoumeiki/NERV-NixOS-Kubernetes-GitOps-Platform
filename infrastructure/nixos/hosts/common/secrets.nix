@@ -35,13 +35,6 @@
         mode = "0400";  # Secure cluster join token
       };
 
-      # GitOps application secrets
-      "flux/gitToken" = {
-        name = "flux-git-token";
-        owner = "root";
-        group = "root";
-        mode = "0400";  # Flux v2 Git repository access token
-      };
 
       # Additional secrets can be added here as needed
     };

@@ -28,7 +28,7 @@ cd infrastructure/nixos && nix develop
 ### 1. Prepare Target System
 1. Boot target from NixOS ISO
 2. Set root password: `passwd root`
-3. Start SSH: `systemctl start sshd`  
+3. Start SSH: `systemctl start sshd`
 4. Note IP address: `ip addr show`
 
 ### 2. Configure Secrets
