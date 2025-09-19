@@ -7,17 +7,14 @@ resources:
   - namespaces.yaml
   - sources/helm-repositories.yaml
   
-  # Infrastructure services (deployment order matters)
+  # Infrastructure services (simplified linear deployment with dependsOn)
   - releases/metallb/helmrelease.yaml
   - releases/cert-manager/helmrelease.yaml
-  - releases/longhorn/helmrelease.yaml
   - releases/traefik/helmrelease.yaml
+  - releases/longhorn/helmrelease.yaml
   
   # Monitoring and health checks
   - flux-health-checks.yaml
-  
-  # Phase 2: Dependent configurations
-  - metallb-config-phase.yaml
 
 commonLabels:
   app.kubernetes.io/managed-by: flux

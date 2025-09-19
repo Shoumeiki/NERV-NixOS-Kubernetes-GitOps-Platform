@@ -12,6 +12,10 @@ metadata:
 spec:
   interval: 5m
   timeout: 15m
+  # Explicit dependency: Wait for MetalLB to be ready before deploying Traefik
+  dependsOn:
+    - name: metallb
+      namespace: metallb-system
   chart:
     spec:
       chart: traefik
@@ -44,7 +48,8 @@ spec:
       enabled: true
       type: LoadBalancer
       annotations:
-        metallb.universe.tf/loadBalancerIPs: "192.168.1.112"
+        # Use dynamic IP allocation from MetalLB pool instead of hardcoded IP
+        metallb.universe.tf/address-pool: nerv-pool
       spec:
         externalTrafficPolicy: Local
 

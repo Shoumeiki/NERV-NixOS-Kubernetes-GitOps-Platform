@@ -67,3 +67,33 @@ spec:
           value: "0.0.0.0:7472"
         - name: METALLB_ML_LABELS
           value: "app=metallb,component=speaker"
+
+---
+# Consolidated IP pool configuration - deployed atomically with MetalLB
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: nerv-pool
+  namespace: metallb-system
+  labels:
+    app.kubernetes.io/name: nerv-ip-pool
+    app.kubernetes.io/component: network
+    app.kubernetes.io/part-of: nerv-platform
+spec:
+  addresses:
+    - 192.168.1.111-192.168.1.150
+
+---
+# Consolidated L2 advertisement - deployed atomically with MetalLB
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: nerv-l2-advertisement
+  namespace: metallb-system
+  labels:
+    app.kubernetes.io/name: nerv-l2-advertisement
+    app.kubernetes.io/component: network
+    app.kubernetes.io/part-of: nerv-platform
+spec:
+  ipAddressPools:
+    - nerv-pool
