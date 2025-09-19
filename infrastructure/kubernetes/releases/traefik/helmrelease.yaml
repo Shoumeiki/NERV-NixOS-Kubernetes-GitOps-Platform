@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/component: ingress-controller
 spec:
   interval: 5m
-  timeout: 10m
+  timeout: 15m
   chart:
     spec:
       chart: traefik
