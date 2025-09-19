@@ -38,20 +38,22 @@ data:
         name: longhorn-manager
         timeout: 5m
 
----
-apiVersion: v1
-kind: ServiceMonitor
-metadata:
-  name: flux-controllers
-  namespace: flux-system
-  labels:
-    app.kubernetes.io/name: flux-controllers
-    app.kubernetes.io/component: monitoring
-spec:
-  selector:
-    matchLabels:
-      app: source-controller
-  endpoints:
-  - port: http-prom
-    interval: 30s
-    path: /metrics
+# ServiceMonitor removed - requires Prometheus Operator
+# To enable monitoring, install Prometheus Operator first, then uncomment:
+#---
+#apiVersion: monitoring.coreos.com/v1
+#kind: ServiceMonitor
+#metadata:
+#  name: flux-controllers
+#  namespace: flux-system
+#  labels:
+#    app.kubernetes.io/name: flux-controllers
+#    app.kubernetes.io/component: monitoring
+#spec:
+#  selector:
+#    matchLabels:
+#      app: source-controller
+#  endpoints:
+#  - port: http-prom
+#    interval: 30s
+#    path: /metrics
