@@ -51,6 +51,9 @@ spec:
       backupTargetCredentialSecret: ""
       autoCleanupSystemGeneratedSnapshot: true
       autoDeletePodWhenVolumeDetachedUnexpectedly: true
+      nodeDownPodDeletionPolicy: "delete-both-statefulset-and-deployment-pod"
+      replicaReplenishmentWaitInterval: 600
+      offlineReplicaRebuilding: true
 
     longhornManager:
       tolerations:
@@ -79,10 +82,7 @@ spec:
 
     service:
       ui:
-        type: LoadBalancer
-        loadBalancerIP: "192.168.1.113"  # Reserved IP for Longhorn UI
-        annotations:
-          metallb.universe.tf/loadBalancerIPs: "192.168.1.113"
+        type: ClusterIP
 
     ingress:
       enabled: true

@@ -43,7 +43,6 @@ spec:
     service:
       enabled: true
       type: LoadBalancer
-      loadBalancerIP: "192.168.1.112"
       annotations:
         metallb.universe.tf/loadBalancerIPs: "192.168.1.112"
       spec:
@@ -56,6 +55,8 @@ spec:
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.websecure.http.tls=true"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
       - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
       - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
       - "--certificatesresolvers.letsencrypt.acme.email=shoumeiki@gmail.com"
@@ -89,8 +90,6 @@ spec:
     ingressRoute:
       dashboard:
         enabled: true
-        annotations:
-          traefik.ingress.kubernetes.io/router.tls: "true"
         matchRule: Host(`traefik.nerv.local`)
         entryPoints:
           - websecure
