@@ -116,7 +116,6 @@ in
             # Reduce clone depth for faster syncs
             gitSpec = {
               depth = 1;
-              semver = ">=0.0.0";
             };
           };
         };
@@ -144,7 +143,6 @@ in
             wait = true;
             force = true;
             # Performance optimizations for Flux v2.6
-            targetNamespace = cfg.namespace;
             commonMetadata = {
               labels = {
                 "app.kubernetes.io/managed-by" = "flux";
@@ -168,18 +166,59 @@ in
         ExecStart = "${pkgs.writeShellScript "flux-bootstrap" ''
           set -euo pipefail
           
-          timeout=60
+          echo "Waiting for Kubernetes API..."
+          timeout=120
           while ! ${pkgs.kubectl}/bin/kubectl get nodes >/dev/null 2>&1 && [[ $timeout -gt 0 ]]; do
             sleep 2
             ((timeout--))
           done
 
           if [[ $timeout -eq 0 ]]; then
-            echo "Kubernetes API not available"
+            echo "Kubernetes API not available after 4 minutes"
             exit 1
           fi
 
-          echo "Flux GitOps ready"
+          echo "Kubernetes API ready"
+          
+          # Check if Flux is already installed
+          if ${pkgs.kubectl}/bin/kubectl get namespace flux-system >/dev/null 2>&1; then
+            echo "Flux namespace exists, checking controllers..."
+            
+            # Wait for Flux controllers to be ready
+            timeout=60
+            while ! ${pkgs.kubectl}/bin/kubectl get pods -n flux-system --field-selector=status.phase=Running | grep -q "source-controller" && [[ $timeout -gt 0 ]]; do
+              echo "Waiting for Flux controllers..."
+              sleep 2
+              ((timeout--))
+            done
+            
+            if [[ $timeout -eq 0 ]]; then
+              echo "Flux controllers not ready after 2 minutes"
+              exit 1
+            fi
+            
+            echo "Flux controllers are running"
+            
+            # Check GitOps status
+            if ${pkgs.kubectl}/bin/kubectl get gitrepository nerv-platform -n flux-system >/dev/null 2>&1; then
+              echo "GitRepository found, checking sync status..."
+              
+              # Check if Kustomization is healthy
+              if ${pkgs.kubectl}/bin/kubectl get kustomization nerv-infrastructure -n flux-system -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' | grep -q "True"; then
+                echo "GitOps pipeline is healthy - infrastructure deployed successfully"
+              else
+                echo "Warning: Kustomization not ready, checking for errors..."
+                ${pkgs.kubectl}/bin/kubectl describe kustomization nerv-infrastructure -n flux-system || true
+              fi
+            else
+              echo "Warning: GitRepository not found"
+            fi
+          else
+            echo "Flux not installed - this should not happen with current configuration"
+            exit 1
+          fi
+          
+          echo "Flux GitOps bootstrap complete"
         ''}";
         User = "nobody";
         Group = "nogroup";
