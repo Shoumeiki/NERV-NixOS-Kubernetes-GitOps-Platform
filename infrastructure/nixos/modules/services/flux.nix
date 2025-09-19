@@ -95,7 +95,7 @@ in
       flux-system-install = {
         source = pkgs.fetchurl {
           url = "https://github.com/fluxcd/flux2/releases/download/v2.6.1/install.yaml";
-          sha256 = ""; # Hash will be calculated during build
+          sha256 = "sha256-1e9lSJ+aaDcq1iadq3nW7+m4opHz+j6rlcu1V10wP/Y=";
         };
       };
 
