@@ -93,8 +93,7 @@ spec:
         matchRule: Host(`traefik.nerv.local`)
         entryPoints:
           - websecure
-        tls:
-          secretName: traefik-dashboard-tls
+        tls: {}
 
     persistence:
       enabled: true

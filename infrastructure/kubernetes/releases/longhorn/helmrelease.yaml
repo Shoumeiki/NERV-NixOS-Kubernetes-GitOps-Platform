@@ -89,7 +89,6 @@ spec:
       ingressClassName: traefik
       host: longhorn.nerv.local
       tls: true
-      tlsSecret: longhorn-tls
       annotations:
         cert-manager.io/cluster-issuer: "letsencrypt-staging"
         traefik.ingress.kubernetes.io/router.tls: "true"
