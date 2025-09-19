@@ -5,18 +5,17 @@ kind: Kustomization
 
 resources:
   - namespaces.yaml
-
   - sources/helm-repositories.yaml
-
+  
+  # Infrastructure services (deployment order matters)
   - releases/metallb/helmrelease.yaml
-
   - metallb-config.yaml
-
   - releases/cert-manager/helmrelease.yaml
-
   - releases/traefik/helmrelease.yaml
-
   - releases/longhorn/helmrelease.yaml
+  
+  # Monitoring and health checks
+  - flux-health-checks.yaml
 
 commonLabels:
   app.kubernetes.io/managed-by: flux
@@ -25,3 +24,6 @@ commonLabels:
 commonAnnotations:
   config.kubernetes.io/local-config: "false"
   fluxcd.io/managed: "true"
+  # GitOps metadata for tracking and management
+  nerv.platform/deployment-order: "infrastructure"
+  nerv.platform/criticality: "high"

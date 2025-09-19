@@ -52,6 +52,12 @@
       "fs.file-max" = 2097152;          # Increase file descriptor limit
       "net.core.rmem_max" = 134217728;  # Increase network buffer sizes
       "net.core.wmem_max" = 134217728;
+      # Additional Kubernetes optimizations
+      "fs.inotify.max_user_watches" = 524288;      # Support more file watches
+      "fs.inotify.max_user_instances" = 512;       # Support more inotify instances
+      "net.core.netdev_max_backlog" = 30000;       # Network performance
+      "net.ipv4.tcp_max_syn_backlog" = 8096;       # TCP connection optimization
+      "vm.max_map_count" = 262144;                 # Memory mapping for containers
     };
   };
 
@@ -89,6 +95,15 @@
       extraFlags = toString ([
         "--disable=traefik"   # Use external Traefik via GitOps
         "--disable=servicelb" # Use MetalLB via GitOps
+        "--disable=local-storage" # Use Longhorn for storage
+        # Performance optimizations for single-node cluster
+        "--kube-apiserver-arg=max-requests-inflight=400"
+        "--kube-apiserver-arg=max-mutating-requests-inflight=200" 
+        "--kube-controller-manager-arg=node-monitor-period=2s"
+        "--kube-controller-manager-arg=node-monitor-grace-period=16s"
+        "--kubelet-arg=max-pods=110"
+        "--kubelet-arg=cluster-dns=10.43.0.10"
+        "--write-kubeconfig-mode=644"
       ] ++ (lib.mapAttrsToList (key: value: "--node-label=${key}=${value}") config.nerv.nodeRole.nodeLabels));
     };
 

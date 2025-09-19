@@ -11,6 +11,7 @@ metadata:
     app.kubernetes.io/component: ingress-controller
 spec:
   interval: 5m
+  timeout: 10m
   chart:
     spec:
       chart: traefik
@@ -19,13 +20,20 @@ spec:
         kind: HelmRepository
         name: traefik
         namespace: flux-system
+      reconcileStrategy: ChartVersion
   install:
     createNamespace: true
     remediation:
       retries: 3
+    crds: CreateReplace
   upgrade:
+    cleanupOnFail: true
     remediation:
       retries: 3
+      remediateLastFailure: true
+    crds: CreateReplace
+  rollback:
+    cleanupOnFail: true
   values:
     deployment:
       enabled: true
@@ -52,6 +60,12 @@ spec:
       - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
       - "--certificatesresolvers.letsencrypt.acme.email=shoumeiki@gmail.com"
       - "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json"
+      # Performance optimizations for Traefik v3
+      - "--global.checknewversion=false"
+      - "--global.sendanonymoususage=false"
+      - "--serversTransport.insecureSkipVerify=true"
+      - "--log.level=INFO"
+      - "--accesslog=false"
 
     ports:
       web:

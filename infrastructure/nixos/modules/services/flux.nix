@@ -48,6 +48,27 @@ in
       default = "1m";
       description = "Reconciliation interval";
     };
+
+    # Performance optimization options for Flux v2.6
+    optimization = {
+      retryInterval = mkOption {
+        type = types.str;
+        default = "2m";
+        description = "Retry interval for failed reconciliations";
+      };
+
+      timeout = mkOption {
+        type = types.str;
+        default = "10m";
+        description = "Timeout for reconciliation operations";
+      };
+
+      suspend = mkOption {
+        type = types.bool;
+        default = false;
+        description = "Suspend reconciliation for maintenance";
+      };
+    };
   };
 
   config = mkIf cfg.enable {
@@ -90,6 +111,13 @@ in
             interval = cfg.interval;
             url = cfg.repository.url;
             ref.branch = cfg.repository.branch;
+            # Performance optimization for large repositories
+            gitImplementation = "go-git";
+            # Reduce clone depth for faster syncs
+            gitSpec = {
+              depth = 1;
+              semver = ">=0.0.0";
+            };
           };
         };
       };
@@ -104,6 +132,9 @@ in
           };
           spec = {
             interval = cfg.interval;
+            retryInterval = cfg.optimization.retryInterval;
+            timeout = cfg.optimization.timeout;
+            suspend = cfg.optimization.suspend;
             sourceRef = {
               kind = "GitRepository";
               name = "nerv-platform";
@@ -111,8 +142,15 @@ in
             path = cfg.repository.path;
             prune = true;
             wait = true;
-            timeout = "5m";
             force = true;
+            # Performance optimizations for Flux v2.6
+            targetNamespace = cfg.namespace;
+            commonMetadata = {
+              labels = {
+                "app.kubernetes.io/managed-by" = "flux";
+                "app.kubernetes.io/part-of" = "nerv-platform";
+              };
+            };
           };
         };
       };

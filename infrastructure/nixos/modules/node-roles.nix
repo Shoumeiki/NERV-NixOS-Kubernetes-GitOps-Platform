@@ -55,7 +55,9 @@ in
       maxPods = mkOption {
         type = types.int;
         default =
-          if cfg.role == "control-plane" then 50
+          # Optimized pod limits based on hardware and role
+          if cfg.role == "control-plane" && cfg.hardwareProfile == "mini-pc" then 110
+          else if cfg.role == "control-plane" then 50
           else if cfg.role == "storage" then 20
           else if cfg.role == "compute" then 200
           else 100;

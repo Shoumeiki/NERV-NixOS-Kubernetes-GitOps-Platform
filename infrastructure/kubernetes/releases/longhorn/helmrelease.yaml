@@ -11,6 +11,7 @@ metadata:
     app.kubernetes.io/component: storage
 spec:
   interval: 5m
+  timeout: 10m
   chart:
     spec:
       chart: longhorn
@@ -19,23 +20,35 @@ spec:
         kind: HelmRepository
         name: longhorn
         namespace: flux-system
+      reconcileStrategy: ChartVersion
   install:
     createNamespace: true
+    crds: CreateReplace
     remediation:
       retries: 3
   upgrade:
+    crds: CreateReplace
+    cleanupOnFail: true
     remediation:
       retries: 3
+      remediateLastFailure: true
+  rollback:
+    cleanupOnFail: true
   values:
     defaultSettings:
       defaultReplicaCount: 1
-
+      
+      # Single-node optimizations
+      allowVolumeCreationWithDegradedAvailability: true
+      disableSchedulingOnCordonedNode: false
+      replicaSoftAntiAffinity: false
+      storageReservedPercentageForDefaultDisk: 10
+      
       defaultDataPath: "/var/lib/longhorn"
       storageOverProvisioningPercentage: 100
       storageMinimalAvailablePercentage: 25
       backupTarget: ""  # Configure S3/NFS backup target if needed
       backupTargetCredentialSecret: ""
-      allowVolumeCreationWithDegradedAvailability: false
       autoCleanupSystemGeneratedSnapshot: true
       autoDeletePodWhenVolumeDetachedUnexpectedly: true
 

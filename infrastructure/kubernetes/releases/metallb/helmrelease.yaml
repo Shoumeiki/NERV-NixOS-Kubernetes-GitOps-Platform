@@ -11,6 +11,7 @@ metadata:
     app.kubernetes.io/component: load-balancer
 spec:
   interval: 5m
+  timeout: 10m
   chart:
     spec:
       chart: metallb
@@ -19,13 +20,20 @@ spec:
         kind: HelmRepository
         name: metallb
         namespace: flux-system
+      reconcileStrategy: ChartVersion
   install:
     createNamespace: true
+    crds: CreateReplace
     remediation:
       retries: 3
   upgrade:
+    crds: CreateReplace
+    cleanupOnFail: true
     remediation:
       retries: 3
+      remediateLastFailure: true
+  rollback:
+    cleanupOnFail: true
   values:
     controller:
       image:
@@ -46,3 +54,16 @@ spec:
         - key: node-role.kubernetes.io/control-plane
           operator: Exists
           effect: NoSchedule
+      # Performance optimizations for speaker
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 200m
+          memory: 256Mi
+      env:
+        - name: METALLB_ML_BIND_ADDR
+          value: "0.0.0.0:7472"
+        - name: METALLB_ML_LABELS
+          value: "app=metallb,component=speaker"

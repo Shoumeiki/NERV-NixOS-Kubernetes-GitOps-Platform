@@ -11,6 +11,7 @@ metadata:
     app.kubernetes.io/component: certificate-management
 spec:
   interval: 5m
+  timeout: 10m
   chart:
     spec:
       chart: cert-manager
@@ -19,15 +20,26 @@ spec:
         kind: HelmRepository
         name: jetstack
         namespace: flux-system
+      reconcileStrategy: ChartVersion
   install:
     createNamespace: true
+    crds: CreateReplace
     remediation:
       retries: 3
   upgrade:
+    crds: CreateReplace
+    cleanupOnFail: true
     remediation:
       retries: 3
+      remediateLastFailure: true
+  rollback:
+    cleanupOnFail: true
   values:
     installCRDs: true
+
+    extraArgs:
+      - --enable-certificate-owner-ref=true
+      - --max-concurrent-challenges=60
 
     resources:
       requests:
