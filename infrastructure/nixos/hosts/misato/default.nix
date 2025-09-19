@@ -12,6 +12,9 @@
     hostName = "misato";
     useDHCP = lib.mkDefault true;
     wireless.enable = false;
+    # Use only reliable public DNS - no local network interference with K8s
+    nameservers = [ "1.1.1.1" "8.8.8.8" "8.8.4.4" ];
+    resolvconf.enable = false;  # Prevent external DNS interference with cluster DNS
   };
 
   # Configure node role for Kubernetes cluster management
