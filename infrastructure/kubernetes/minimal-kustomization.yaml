@@ -1,0 +1,12 @@
+# Ultra-minimal NERV platform (learning focused)
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespaces.yaml
+  - sources/helm-repositories.yaml
+  - releases/metallb/helmrelease.yaml
+  - releases/traefik/helmrelease.yaml
+
+commonLabels:
+  platform: nerv-minimal

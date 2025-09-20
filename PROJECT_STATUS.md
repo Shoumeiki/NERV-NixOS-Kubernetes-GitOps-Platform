@@ -1,90 +1,85 @@
 # Project Status
 
-Last Updated: 2025-09-16
+Last Updated: 2025-09-20
 
 ## Overview
-- **Goal**: NixOS Kubernetes GitOps platform
-- **Phase**: Infrastructure complete, planning DNS automation  
+- **Goal**: Simplified NixOS Kubernetes GitOps learning platform
+- **Phase**: Ultra-simplified platform complete ✅  
 - **Environment**: Bare metal mini PCs
 
-## Status
+## Simplification Results
+- **Before**: 2560 lines across 24 files
+- **After**: 1846 lines across 14 files  
+- **Reduction**: 28% fewer lines, 42% fewer files
 
-### Completed
-- NixOS base system (25.05)
-- K3s Kubernetes cluster
-- Flux v2 GitOps (v2.4.0)
-- SOPS-Nix secrets
-- MetalLB (IP pool 192.168.1.110-115)
-- Traefik ingress
-- cert-manager
-- Longhorn storage
+## Completed ✅
 
-### Next Phase
-- DNS automation (external-dns)
-- DNS service (Pi-hole/CoreDNS)
-- Domain integration
+### Core Platform
+- NixOS declarative system (25.05)
+- K3s single-node cluster
+- Flux v2 simplified GitOps
+- SOPS-Nix secret management
+- MetalLB LoadBalancer (minimal config)
+- Traefik ingress (auto-configuration)
+- cert-manager (automatic HTTPS)
+- Longhorn storage (single replica)
+- AdGuard Home DNS with ad-blocking
 
-### Future
-- Monitoring stack
-- Backup solution
-- Application workloads
+### Simplifications
+- Removed verbose resource specifications
+- Eliminated complex dependency chains
+- Consolidated configuration management
+- Minimal security contexts for learning
+- Single DNS solution (AdGuard Home)
+- Ultra-minimal deployment option
 
-## Issues
+## Learning Objectives ✅
+- ✅ **GitOps Patterns** - Clean Flux v2 workflow
+- ✅ **Infrastructure as Code** - NixOS + Kubernetes
+- ✅ **Service Discovery** - LoadBalancer + DNS
+- ✅ **Secret Management** - SOPS integration
+- ✅ **Configuration Management** - Centralized approach
+- ✅ **Deployment Automation** - Single-command deploy
 
-### High Priority
-- DNS automation integration
-- Automated DNS record provisioning  
-- Domain delegation automation
+## Optional Enhancements
 
-### Medium Priority
-- Prometheus ServiceMonitor configs
-- Network policies validation
-- Resource quotas optimization
+### When Needed
+- **Monitoring**: Prometheus/Grafana stack
+- **Multi-node**: Scale beyond single node
+- **Production**: Add resource limits and security
+- **Applications**: Deploy actual workloads
+- **Backup**: Velero cluster backup
 
-### Low Priority
-- Custom domain access
-- Log aggregation
-- Backup scheduling
+### Not Required for Learning
+- Complex security contexts
+- Resource quotas and limits  
+- Network policies
+- External DNS automation
+- Production monitoring
 
-## Progress
+## Next Actions
 
-### Infrastructure (9/10)
-- ✅ Automated deployment
-- ✅ Secret management 
-- ✅ GitOps workflow
-- ✅ Certificate automation
-- ✅ Persistent storage
-- 🎯 DNS automation (next)
-- ❌ Monitoring (planned)
-- ❌ Backup/DR (planned)
+Choose your path:
 
-### Learning (95%)
-- ✅ NixOS configuration
-- ✅ Kubernetes cluster management
-- ✅ GitOps workflows
-- ✅ Certificate automation
-- ✅ Distributed storage
-- 🎯 DNS automation (next)
-- ❌ Observability (planned)
+**A. Deploy Simplified Platform**
+```bash
+nixos-anywhere --flake ./infrastructure/nixos#misato root@<ip>
+```
 
-## Next Steps
+**B. Add Applications**
+Use minimal patterns to deploy actual services
 
-### Immediate
-1. Deploy external-dns controller
-2. Configure DNS record automation from ingress
-3. Deploy Pi-hole/CoreDNS service
-4. Test end-to-end DNS automation
+**C. Scale Up**
+Add monitoring, multi-node, or production features
 
-### Short Term  
-- DNS validation testing
-- Update existing services with DNS entries
-- Documentation updates
+## Status: Learning-Optimized ✅
 
-### Medium Term
-- Monitoring stack (Prometheus/Grafana)
-- Production application workloads
-- Backup solution with DNS integration
+Platform now perfectly balances:
+- **Functionality**: All core services working
+- **Simplicity**: Minimal configuration overhead  
+- **Learning**: Clear GitOps patterns
+- **Growth**: Easy migration to production
 
 ---
 
-*"All is proceeding according to scenario."* - Gendo Ikari
+*"Sometimes you must hurt in order to know, fall in order to grow, lose in order to gain."*

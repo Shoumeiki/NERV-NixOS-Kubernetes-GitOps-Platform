@@ -34,39 +34,7 @@ spec:
       remediateLastFailure: true
   rollback:
     cleanupOnFail: true
-  values:
-    controller:
-      image:
-        repository: quay.io/metallb/controller
-        tag: v0.14.8
-      tolerations:
-        - key: node-role.kubernetes.io/control-plane
-          operator: Exists
-          effect: NoSchedule
-      nodeSelector:
-        node-role.kubernetes.io/control-plane: "true"
-
-    speaker:
-      image:
-        repository: quay.io/metallb/speaker
-        tag: v0.14.8
-      tolerations:
-        - key: node-role.kubernetes.io/control-plane
-          operator: Exists
-          effect: NoSchedule
-      # Performance optimizations for speaker
-      resources:
-        requests:
-          cpu: 50m
-          memory: 64Mi
-        limits:
-          cpu: 200m
-          memory: 256Mi
-      env:
-        - name: METALLB_ML_BIND_ADDR
-          value: "0.0.0.0:7472"
-        - name: METALLB_ML_LABELS
-          value: "app=metallb,component=speaker"
+  values: {}
 
 ---
 # Consolidated IP pool configuration - deployed atomically with MetalLB

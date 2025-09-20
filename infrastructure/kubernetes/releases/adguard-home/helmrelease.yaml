@@ -1,17 +1,12 @@
-# AdGuard Home - Modern DNS server with ad-blocking and web UI
+# Minimal AdGuard Home for DNS ad-blocking
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: adguard-home
   namespace: dns-system
-  labels:
-    app.kubernetes.io/name: adguard-home
-    app.kubernetes.io/component: dns-server
-    app.kubernetes.io/part-of: nerv-platform
 spec:
   interval: 5m
-  timeout: 15m
   chart:
     spec:
       chart: adguard-home
@@ -20,258 +15,35 @@ spec:
         kind: HelmRepository
         name: k8s-at-home
         namespace: flux-system
-      reconcileStrategy: ChartVersion
   install:
     createNamespace: true
-    remediation:
-      retries: 3
-  upgrade:
-    cleanupOnFail: true
-    remediation:
-      retries: 3
-      remediateLastFailure: true
-  rollback:
-    cleanupOnFail: true
   values:
-    # Container configuration
-    image:
-      repository: adguard/adguardhome
-      tag: "v0.108.0"
-      pullPolicy: IfNotPresent
-
-    # Enterprise deployment configuration
-    controller:
-      type: deployment
-      replicas: 1
-      strategy: Recreate
-
-    # Network configuration for DNS services
     service:
       main:
         type: LoadBalancer
-        annotations:
-          metallb.universe.tf/address-pool: nerv-pool
         ports:
           http:
             port: 3000
-            protocol: HTTP
-            targetPort: 3000
           dns-tcp:
             port: 53
             protocol: TCP
-            targetPort: 53
           dns-udp:
             port: 53
             protocol: UDP
-            targetPort: 53
-          dns-https:
-            port: 443
-            protocol: HTTPS
-            targetPort: 443
-          dns-tls:
-            port: 853
-            protocol: TCP
-            targetPort: 853
 
-    # Ingress for web management interface
     ingress:
       main:
         enabled: true
-        ingressClassName: traefik
-        annotations:
-          cert-manager.io/cluster-issuer: "letsencrypt-staging"
-          traefik.ingress.kubernetes.io/router.tls: "true"
         hosts:
           - host: adguard.nerv.local
             paths:
               - path: /
-                pathType: Prefix
-                service:
-                  name: adguard-home
-                  port: 3000
-        tls:
-          - secretName: adguard-home-tls
-            hosts:
-              - adguard.nerv.local
 
-    # Persistent storage for configuration and data
     persistence:
       config:
         enabled: true
-        type: pvc
         size: 1Gi
-        storageClass: longhorn
-        accessMode: ReadWriteOnce
-        mountPath: /opt/adguardhome/conf
       data:
         enabled: true
-        type: pvc
-        size: 5Gi
-        storageClass: longhorn
-        accessMode: ReadWriteOnce
-        mountPath: /opt/adguardhome/work
+        size: 2Gi
 
-    # Resource limits for production use
-    resources:
-      requests:
-        cpu: 100m
-        memory: 256Mi
-      limits:
-        cpu: 500m
-        memory: 1Gi
-
-    # Security configuration
-    securityContext:
-      runAsNonRoot: true
-      runAsUser: 1000
-      runAsGroup: 1000
-      fsGroup: 1000
-      capabilities:
-        add:
-          - NET_BIND_SERVICE
-        drop:
-          - ALL
-
-    # Node scheduling
-    nodeSelector:
-      node-role.kubernetes.io/control-plane: "true"
-    tolerations:
-      - key: node-role.kubernetes.io/control-plane
-        operator: Exists
-        effect: NoSchedule
-
-    # Environment variables for configuration
-    env:
-      TZ: "UTC"
-      AGH_CONFIG: "/opt/adguardhome/conf/AdGuardHome.yaml"
-
----
-# Initial configuration for AdGuard Home
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: adguard-home-config
-  namespace: dns-system
-  labels:
-    app.kubernetes.io/name: adguard-home-config
-    app.kubernetes.io/component: dns-configuration
-    app.kubernetes.io/part-of: nerv-platform
-data:
-  AdGuardHome.yaml: |
-    # AdGuard Home configuration for enterprise use
-    bind_host: 0.0.0.0
-    bind_port: 3000
-    beta_bind_port: 0
-    users:
-      - name: admin
-        password: $2a$10$placeholder # Change this password after deployment
-    auth_attempts: 5
-    block_auth_min: 15
-    http_proxy: ""
-    language: en
-    rlimit_nofile: 0
-    debug_pprof: false
-    web_session_ttl: 720
-    
-    dns:
-      bind_hosts:
-        - 0.0.0.0
-      port: 53
-      statistics_interval: 1
-      querylog_enabled: true
-      querylog_file_enabled: true
-      querylog_interval: 90
-      querylog_size_memory: 1000
-      anonymize_client_ip: false
-      protection_enabled: true
-      blocking_mode: default
-      blocking_ipv4: ""
-      blocking_ipv6: ""
-      blocked_response_ttl: 10
-      parental_block_host: family-block.dns.adguard.com
-      safebrowsing_block_host: standard-block.dns.adguard.com
-      ratelimit: 20
-      ratelimit_whitelist: []
-      refuse_any: true
-      upstream_dns:
-        - 1.1.1.1
-        - 9.9.9.9
-        - 8.8.8.8
-      upstream_dns_file: ""
-      bootstrap_dns:
-        - 1.1.1.1
-        - 9.9.9.9
-      all_servers: false
-      fastest_addr: false
-      allowed_clients: []
-      disallowed_clients: []
-      blocked_hosts:
-        - version.bind
-        - id.server
-        - hostname.bind
-      cache_size: 4194304
-      cache_ttl_min: 0
-      cache_ttl_max: 0
-      bogus_nxdomain: []
-      aaaa_disabled: false
-      enable_dnssec: false
-      edns_client_subnet: false
-      max_goroutines: 300
-      ipset: []
-      filtering_enabled: true
-      filters_update_interval: 24
-      parental_enabled: false
-      safesearch_enabled: false
-      safebrowsing_enabled: false
-      parental_block_host: family-block.dns.adguard.com
-      safebrowsing_block_host: standard-block.dns.adguard.com
-      rewrites: []
-      blocked_services: []
-      local_domain_name: nerv.local
-      resolve_clients: true
-      use_private_ptr_resolvers: true
-      local_ptr_upstreams: []
-
-    tls:
-      enabled: false
-      server_name: ""
-      force_https: false
-      port_https: 443
-      port_dns_over_tls: 853
-      port_dns_over_quic: 784
-      port_dnscrypt: 0
-      dnscrypt_config_file: ""
-      allow_unencrypted_doh: false
-      strict_sni_check: false
-      certificate_chain: ""
-      private_key: ""
-      certificate_path: ""
-      private_key_path: ""
-
-    filters:
-      - enabled: true
-        url: https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt
-        name: AdGuard DNS filter
-        id: 1
-      - enabled: true
-        url: https://someonewhocares.org/hosts/zero/hosts
-        name: Dan Pollock's List
-        id: 2
-      - enabled: true
-        url: https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
-        name: Steven Black's List
-        id: 3
-
-    whitelist_filters: []
-    user_rules: []
-    dhcp:
-      enabled: false
-    clients: []
-    log_compress: false
-    log_localtime: false
-    log_max_backups: 0
-    log_max_size: 100
-    log_max_age: 3
-    log_file: ""
-    verbose: false
-    schema_version: 12

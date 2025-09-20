@@ -1,58 +1,10 @@
-# Central platform configuration
+# Minimal platform configuration
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: nerv-platform-config
+  name: nerv-config
   namespace: flux-system
-  labels:
-    app.kubernetes.io/name: nerv-platform-config
-    app.kubernetes.io/component: configuration
-    app.kubernetes.io/part-of: nerv-platform
 data:
-  # Network configuration
-  cluster.domain: "nerv.local"
-  metallb.pool.start: "192.168.1.111"
-  metallb.pool.end: "192.168.1.150"
-  metallb.pool.name: "nerv-pool"
-  
-  # Service endpoints (DNS-based)
-  traefik.dashboard.host: "traefik.nerv.local"
-  longhorn.ui.host: "longhorn.nerv.local"
-  grafana.host: "grafana.nerv.local"
-  adguard.host: "adguard.nerv.local"
-  
-  # DNS configuration
-  dns.server.type: "adguard-home"  # Options: adguard-home, coredns-adblock, pihole
-  dns.upstream.primary: "1.1.1.1"
-  dns.upstream.secondary: "9.9.9.9"
-  dns.local.domain: "nerv.local"
-  
-  # TLS configuration
-  cert.issuer: "letsencrypt-staging"
-  cert.email: "admin@nerv.local"
-  
-  # Storage configuration
-  storage.default.class: "longhorn"
-  storage.replica.count: "1"
-  
-  # Performance tuning
-  flux.interval: "1m"
-  flux.timeout: "10m"
-  flux.retry.interval: "2m"
-
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: nerv-platform-secrets
-  namespace: flux-system
-  labels:
-    app.kubernetes.io/name: nerv-platform-secrets
-    app.kubernetes.io/component: configuration
-    app.kubernetes.io/part-of: nerv-platform
-type: Opaque
-stringData:
-  # Placeholder - actual secrets managed via SOPS
-  acme.email: "admin@nerv.local"
-  admin.password: "change-me"
+  domain: "nerv.local"
+  pool: "192.168.1.111-192.168.1.150"

@@ -49,26 +49,6 @@ in
       description = "Reconciliation interval";
     };
 
-    # Performance optimization options for Flux v2.6
-    optimization = {
-      retryInterval = mkOption {
-        type = types.str;
-        default = "2m";
-        description = "Retry interval for failed reconciliations";
-      };
-
-      timeout = mkOption {
-        type = types.str;
-        default = "10m";
-        description = "Timeout for reconciliation operations";
-      };
-
-      suspend = mkOption {
-        type = types.bool;
-        default = false;
-        description = "Suspend reconciliation for maintenance";
-      };
-    };
   };
 
   config = mkIf cfg.enable {
@@ -131,24 +111,12 @@ in
           };
           spec = {
             interval = cfg.interval;
-            retryInterval = cfg.optimization.retryInterval;
-            timeout = cfg.optimization.timeout;
-            suspend = cfg.optimization.suspend;
             sourceRef = {
               kind = "GitRepository";
               name = "nerv-platform";
             };
             path = cfg.repository.path;
             prune = true;
-            wait = true;
-            force = true;
-            # Performance optimizations for Flux v2.6
-            commonMetadata = {
-              labels = {
-                "app.kubernetes.io/managed-by" = "flux";
-                "app.kubernetes.io/part-of" = "nerv-platform";
-              };
-            };
           };
         };
       };

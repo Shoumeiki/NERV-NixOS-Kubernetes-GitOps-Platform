@@ -56,67 +56,10 @@ spec:
       replicaReplenishmentWaitInterval: 600
       offlineReplicaRebuilding: true
 
-    longhornManager:
-      tolerations:
-        - key: node-role.kubernetes.io/control-plane
-          operator: Exists
-          effect: NoSchedule
-      nodeSelector:
-        node-role.kubernetes.io/control-plane: "true"
-
-    longhornDriver:
-      tolerations:
-        - key: node-role.kubernetes.io/control-plane
-          operator: Exists
-          effect: NoSchedule
-      nodeSelector:
-        node-role.kubernetes.io/control-plane: "true"
-
-    longhornUI:
-      replicas: 1
-      tolerations:
-        - key: node-role.kubernetes.io/control-plane
-          operator: Exists
-          effect: NoSchedule
-      nodeSelector:
-        node-role.kubernetes.io/control-plane: "true"
-
-    service:
-      ui:
-        type: ClusterIP
-
     ingress:
       enabled: true
-      ingressClassName: traefik
       host: longhorn.nerv.local
-      tls: true
-      annotations:
-        cert-manager.io/cluster-issuer: "letsencrypt-staging"
-        traefik.ingress.kubernetes.io/router.tls: "true"
-
-    resources:
-      requests:
-        cpu: 100m
-        memory: 128Mi
-      limits:
-        cpu: 500m
-        memory: 512Mi
 
     persistence:
       defaultClass: true
       defaultClassReplicaCount: 1
-      defaultFsType: ext4
-      reclaimPolicy: Retain
-
-    csi:
-      kubeletRootDir: "/var/lib/kubelet"
-      attacherReplicaCount: 1
-      provisionerReplicaCount: 1
-      resizerReplicaCount: 1
-      snapshotterReplicaCount: 1
-
-    longhornInstanceManager:
-      tolerations:
-        - key: node-role.kubernetes.io/control-plane
-          operator: Exists
-          effect: NoSchedule
