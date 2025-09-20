@@ -13,7 +13,6 @@ resources:
   - releases/cert-manager/helmrelease.yaml
   - releases/traefik/helmrelease.yaml
   - releases/longhorn/helmrelease.yaml
-  - releases/external-dns/helmrelease.yaml
   
   # Monitoring and health checks
   - flux-health-checks.yaml
