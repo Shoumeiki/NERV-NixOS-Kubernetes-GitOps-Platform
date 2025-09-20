@@ -60,12 +60,12 @@ spec:
 apiVersion: source.toolkit.fluxcd.io/v1beta2
 kind: HelmRepository
 metadata:
-  name: external-dns
+  name: k8s-at-home
   namespace: flux-system
   labels:
-    app.kubernetes.io/name: external-dns-repo
+    app.kubernetes.io/name: k8s-at-home-repo
     app.kubernetes.io/component: source
 spec:
   interval: 1h
-  url: https://kubernetes-sigs.github.io/external-dns
+  url: https://k8s-at-home.com/charts/
   timeout: 60s

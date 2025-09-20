@@ -20,6 +20,13 @@ data:
   traefik.dashboard.host: "traefik.nerv.local"
   longhorn.ui.host: "longhorn.nerv.local"
   grafana.host: "grafana.nerv.local"
+  adguard.host: "adguard.nerv.local"
+  
+  # DNS configuration
+  dns.server.type: "adguard-home"  # Options: adguard-home, coredns-adblock, pihole
+  dns.upstream.primary: "1.1.1.1"
+  dns.upstream.secondary: "9.9.9.9"
+  dns.local.domain: "nerv.local"
   
   # TLS configuration
   cert.issuer: "letsencrypt-staging"
