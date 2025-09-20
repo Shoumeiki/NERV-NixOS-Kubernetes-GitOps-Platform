@@ -12,10 +12,7 @@ metadata:
 spec:
   interval: 5m
   timeout: 15m
-  # Explicit dependency: Wait for MetalLB to be ready before deploying Traefik
-  dependsOn:
-    - name: metallb
-      namespace: metallb-system
+  # Removed hard dependency - use init container for health checks instead
   chart:
     spec:
       chart: traefik
@@ -43,6 +40,18 @@ spec:
       enabled: true
       kind: Deployment
       replicas: 1
+      
+    env:
+      - name: ACME_EMAIL
+        valueFrom:
+          configMapKeyRef:
+            name: nerv-platform-config
+            key: cert.email
+      - name: TRAEFIK_HOST
+        valueFrom:
+          configMapKeyRef:
+            name: nerv-platform-config
+            key: traefik.dashboard.host
 
     service:
       enabled: true
@@ -64,7 +73,7 @@ spec:
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
       - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
       - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
-      - "--certificatesresolvers.letsencrypt.acme.email=shoumeiki@gmail.com"
+      - "--certificatesresolvers.letsencrypt.acme.email=$(ACME_EMAIL)"
       - "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json"
       # Performance optimizations for Traefik v3
       - "--global.checknewversion=false"
@@ -95,7 +104,7 @@ spec:
     ingressRoute:
       dashboard:
         enabled: true
-        matchRule: Host(`traefik.nerv.local`)
+        matchRule: Host(`$(TRAEFIK_HOST)`)
         entryPoints:
           - websecure
         tls: {}

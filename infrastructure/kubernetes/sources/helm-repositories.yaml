@@ -55,3 +55,17 @@ spec:
   interval: 1h
   url: https://charts.longhorn.io
   timeout: 60s
+
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: external-dns
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: external-dns-repo
+    app.kubernetes.io/component: source
+spec:
+  interval: 1h
+  url: https://kubernetes-sigs.github.io/external-dns
+  timeout: 60s

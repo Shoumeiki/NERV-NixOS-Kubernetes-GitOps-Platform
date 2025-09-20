@@ -12,10 +12,7 @@ metadata:
 spec:
   interval: 5m
   timeout: 20m
-  # Explicit dependency: Wait for Traefik to be ready for ingress
-  dependsOn:
-    - name: traefik
-      namespace: traefik-system
+  # Removed hard dependency - ingress will be created when Traefik is ready
   chart:
     spec:
       chart: longhorn

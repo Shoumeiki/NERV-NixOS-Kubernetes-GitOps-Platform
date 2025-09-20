@@ -81,6 +81,7 @@ metadata:
     app.kubernetes.io/part-of: nerv-platform
 spec:
   addresses:
+    # Use ConfigMap for centralized IP pool management
     - 192.168.1.111-192.168.1.150
 
 ---
