@@ -5,6 +5,7 @@
 # Editor directories
 .vscode/
 .idea/
+.gitignore
 
 # OS files
 .DS_Store
