@@ -4,7 +4,7 @@ Last Updated: 2025-09-24
 
 ## Overview
 - **Goal**: Simplified NixOS Kubernetes GitOps learning platform
-- **Phase**: Core architecture simplification complete ✅  
+- **Phase**: Core architecture simplification complete ✅
 - **Environment**: Bare metal mini PCs (single-node, multi-node ready)
 
 ## Latest Simplification Results
@@ -53,7 +53,7 @@ Last Updated: 2025-09-24
 
 ### Not Required for Learning
 - Complex security contexts
-- Resource quotas and limits  
+- Resource quotas and limits
 - Network policies
 - External DNS automation
 - Production monitoring

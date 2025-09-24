@@ -22,7 +22,7 @@
     system = "x86_64-linux";
     pkgs = nixpkgs.legacyPackages.${system};
     nodes = [ "misato" ];
-    
+
     mkNodeConfig = nodeName: {
       name = nodeName;
       value = nixpkgs.lib.nixosSystem {
@@ -44,7 +44,7 @@
   in
   {
     nixosConfigurations = builtins.listToAttrs (map mkNodeConfig nodes);
-    
+
     devShells.${system}.default = pkgs.mkShell {
       buildInputs = with pkgs; [
         git
