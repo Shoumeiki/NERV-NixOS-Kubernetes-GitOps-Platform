@@ -98,7 +98,7 @@ infrastructure/
 kubectl get nodes
 kubectl get pods -A
 
-# Check Flux status  
+# Check Flux status
 kubectl get gitrepositories,helmreleases -A
 
 # View service IPs
@@ -112,7 +112,7 @@ kubectl logs -n flux-system -l app=source-controller
 
 When ready for production, add back:
 - Resource limits and requests
-- Security policies and contexts  
+- Security policies and contexts
 - Monitoring and alerting
 - Backup strategies
 - Network policies

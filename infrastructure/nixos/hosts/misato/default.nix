@@ -18,18 +18,7 @@
   };
 
   # Configure node role for Kubernetes cluster management
-  nerv.nodeRole = {
-    role = "control-plane";      # Primary cluster management node
-    hardwareProfile = "mini-pc";  # Intel N150 mini PC optimization
-    storage = {
-      allowScheduling = true;      # Allow Longhorn storage scheduling
-      tier = "standard";
-    };
-    compute = {
-      allowWorkloads = true;       # Allow general workloads on control plane
-      maxPods = 100;               # Reasonable pod limit for mini PC
-    };
-  };
+  nerv.nodeRole.role = "control-plane";
 
   # Boot configuration optimized for Intel N150 and Kubernetes workloads
   boot = {
