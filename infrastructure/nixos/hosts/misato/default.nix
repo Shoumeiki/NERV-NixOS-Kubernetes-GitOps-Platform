@@ -107,7 +107,6 @@
       owner = "Shoumeiki";
       repository = "NERV-NixOS-Kubernetes-GitOps-Platform";
       branch = "main";
-      path = "infrastructure/kubernetes";
     };
   };
 

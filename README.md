@@ -49,7 +49,8 @@ Git Repository → Flux Bootstrap → Kubernetes Services
 
 Single-node cluster with essential services:
 ```bash
-# Uses: infrastructure/kubernetes/kustomization.yaml
+# Flux bootstraps to: infrastructure/kubernetes/flux-system/
+# Apps deployed from: infrastructure/kubernetes/apps/
 # MetalLB + cert-manager + Traefik + Longhorn
 # ~300 lines total configuration
 ```
@@ -68,7 +69,7 @@ Multi-node support: Set `nerv.nodeRole.role = "worker"` in additional host confi
 
 ```bash
 # Make changes
-vim infrastructure/kubernetes/releases/new-service.yaml
+vim infrastructure/kubernetes/apps/releases/new-service.yaml
 
 # Commit and push
 git add . && git commit -m "add service"
@@ -82,13 +83,20 @@ kubectl get helmreleases -A
 
 ```
 infrastructure/
-├── nixos/                    # Host configuration
-│   ├── flake.nix            # System definition
-│   └── modules/             # NixOS modules
-└── kubernetes/              # Kubernetes manifests
-    ├── kustomization.yaml   # Full platform
-    ├── minimal-kustomization.yaml  # Learning mode
-    └── releases/            # Service configurations
+├── nixos/                       # Host configuration
+│   ├── flake.nix               # System definition
+│   └── modules/                # NixOS modules
+└── kubernetes/                 # Kubernetes manifests
+    ├── flux-system/            # Flux bootstrap (managed by Flux)
+    │   ├── gotk-components.yaml  # Auto-generated
+    │   ├── gotk-sync.yaml        # Auto-generated
+    │   └── kustomization.yaml    # Flux entry point
+    ├── apps.yaml               # Apps Kustomization CRD
+    └── apps/                   # Your applications
+        ├── namespaces.yaml
+        ├── sources/            # Helm repositories
+        ├── releases/           # HelmReleases
+        └── kustomization.yaml
 ```
 
 ## Troubleshooting

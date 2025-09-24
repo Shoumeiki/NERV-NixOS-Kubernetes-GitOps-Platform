@@ -1,27 +1,6 @@
-# Flux GitOps orchestration for NERV platform infrastructure
-
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-
-metadata:
-  name: nerv-platform-infrastructure
-  namespace: flux-system
-
 resources:
-  - ../sources/helm-repositories.yaml
-
-  - ../releases/metallb/helmrelease.yaml
-
-  - ../releases/cert-manager/helmrelease.yaml
-
-  - ../releases/traefik/helmrelease.yaml
-
-  - ../releases/longhorn/helmrelease.yaml
-
-commonLabels:
-  app.kubernetes.io/managed-by: flux
-  app.kubernetes.io/part-of: nerv-platform
-
-commonAnnotations:
-  config.kubernetes.io/local-config: "false"
-  fluxcd.io/managed: "true"
+  - gotk-components.yaml
+  - gotk-sync.yaml
+  - ../apps.yaml
