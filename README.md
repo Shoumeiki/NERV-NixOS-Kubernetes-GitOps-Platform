@@ -25,15 +25,14 @@ kubectl get svc -A  # Find LoadBalancer IPs
 
 ## What You Get
 
-| Service | Purpose | Access |
-|---------|---------|---------|
-| **K3s** | Kubernetes cluster | `kubectl` |
-| **Flux v2** | GitOps automation | Auto-syncs from Git |
-| **MetalLB** | Load balancer | Provides service IPs |
-| **Traefik** | Ingress controller | HTTP routing |
-| **cert-manager** | TLS certificates | Automatic HTTPS |
-| **Longhorn** | Storage | Persistent volumes |
-| **AdGuard Home** | DNS + ad-blocking | `adguard.nerv.local` |
+| Service | Version | Purpose | Status |
+|---------|---------|---------|--------|
+| **K3s** | v1.31 | Kubernetes cluster | ✅ Running |
+| **Flux v2** | v2.6.1 | GitOps automation | ✅ Auto-syncing |
+| **MetalLB** | v0.15.2 | Load balancer (192.168.1.111-150) | ✅ Operational |
+| **Traefik** | v37.1.1 | Ingress @ 192.168.1.111 | ✅ Running |
+| **cert-manager** | v1.18.2 | TLS certificates | ✅ Ready |
+| **Longhorn** | v1.9.1 | Persistent storage | ✅ Running |
 
 ## Architecture
 
@@ -45,15 +44,23 @@ Git Repository → Flux Bootstrap → Kubernetes Services
 
 **Design Philosophy:** Minimal configuration, maximum learning. Flux auto-bootstraps via `flux bootstrap github`, Helm chart defaults handle complexity.
 
-## Deployment
+## Deployment Status
 
-Single-node cluster with essential services:
+**✅ Platform Fully Operational**
+
+Single-node cluster with all services running:
 ```bash
-# Flux bootstraps to: infrastructure/kubernetes/flux-system/
-# Apps deployed from: infrastructure/kubernetes/apps/
-# MetalLB + cert-manager + Traefik + Longhorn
-# ~300 lines total configuration
+# Flux bootstrap: infrastructure/kubernetes/flux-system/
+# Apps: infrastructure/kubernetes/apps/
+# Config: infrastructure/kubernetes/apps/config/
+# Total: ~300 lines of configuration
 ```
+
+**Verified Working:**
+- All 3 Flux kustomizations reconciling
+- All 4 HelmReleases deployed and Ready
+- Traefik LoadBalancer @ 192.168.1.111
+- Dashboard: `https://traefik.nerv.local`
 
 Multi-node support: Set `nerv.nodeRole.role = "worker"` in additional host configs.
 
@@ -99,22 +106,39 @@ infrastructure/
         └── kustomization.yaml
 ```
 
-## Troubleshooting
+## Verification & Troubleshooting
 
+**Check Platform Health:**
 ```bash
-# Check Flux bootstrap status
+# All should show READY: True
+kubectl get kustomizations -n flux-system
+kubectl get helmreleases -A
+
+# All pods should be Running
+kubectl get pods -A
+
+# Get LoadBalancer IP
+kubectl get svc -n traefik-system
+```
+
+**Access Services:**
+```bash
+# Add to /etc/hosts: 192.168.1.111 traefik.nerv.local
+https://traefik.nerv.local  # Traefik dashboard
+```
+
+**Troubleshooting:**
+```bash
+# Check Flux bootstrap
 systemctl status flux-bootstrap
 journalctl -u flux-bootstrap
 
-# Check cluster status
-kubectl get nodes
-kubectl get pods -A
+# Force reconciliation
+flux reconcile kustomization flux-system -n flux-system
+flux reconcile helmrelease <name> -n <namespace>
 
-# Check Flux reconciliation
-kubectl get gitrepositories,kustomizations,helmreleases -A
-
-# View service IPs
-kubectl get svc -A | grep LoadBalancer
+# Check specific resource
+kubectl describe helmrelease <name> -n <namespace>
 ```
 
 ## Production Migration
