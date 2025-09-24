@@ -1,0 +1,29 @@
+# MetalLB IP pool and L2 advertisement configuration
+# Applied after MetalLB HelmRelease is ready
+
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: nerv-pool
+  namespace: metallb-system
+  labels:
+    app.kubernetes.io/name: nerv-ip-pool
+    app.kubernetes.io/component: network
+    app.kubernetes.io/part-of: nerv-platform
+spec:
+  addresses:
+    - 192.168.1.111-192.168.1.150
+
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: nerv-l2-advertisement
+  namespace: metallb-system
+  labels:
+    app.kubernetes.io/name: nerv-l2-advertisement
+    app.kubernetes.io/component: network
+    app.kubernetes.io/part-of: nerv-platform
+spec:
+  ipAddressPools:
+    - nerv-pool
