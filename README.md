@@ -9,12 +9,17 @@ Ultra-minimal, learning-focused Kubernetes platform with GitOps automation.
 # 2. Set root password and start SSH
 passwd root && systemctl start sshd
 
-# 3. Deploy from development machine
+# 3. Add GitHub token to SOPS secrets
+cd infrastructure/nixos/secrets
+sops secrets.yaml  # Add github.flux-token with your PAT
+
+# 4. Deploy from development machine
 nixos-anywhere --extra-files ~/secrets \
                --flake ./infrastructure/nixos#misato \
                root@<target-ip>
 
-# 4. Access services (auto-configured via MetalLB)
+# 5. Flux auto-bootstraps and syncs from Git
+# Access services (auto-configured via MetalLB)
 kubectl get svc -A  # Find LoadBalancer IPs
 ```
 
@@ -33,36 +38,31 @@ kubectl get svc -A  # Find LoadBalancer IPs
 ## Architecture
 
 ```
-Git Repository → Flux v2 → Kubernetes Services
-     ↓              ↓           ↓
-   Config        Auto-Sync   LoadBalancer IPs
+Git Repository → Flux Bootstrap → Kubernetes Services
+     ↓                ↓                 ↓
+   Config         Auto-Sync        LoadBalancer IPs
 ```
 
-**Design Philosophy:** Minimal configuration, maximum learning. Helm chart defaults handle complexity.
+**Design Philosophy:** Minimal configuration, maximum learning. Flux auto-bootstraps via `flux bootstrap github`, Helm chart defaults handle complexity.
 
-## Deployment Options
+## Deployment
 
-### Full Platform (Recommended)
-All services with minimal configuration:
+Single-node cluster with essential services:
 ```bash
 # Uses: infrastructure/kubernetes/kustomization.yaml
-# ~1800 lines total configuration
+# MetalLB + cert-manager + Traefik + Longhorn
+# ~300 lines total configuration
 ```
 
-### Ultra-Minimal (Learning)
-Only MetalLB + Traefik:
-```bash
-# Uses: infrastructure/kubernetes/minimal-kustomization.yaml  
-# ~400 lines total configuration
-```
+Multi-node support: Set `nerv.nodeRole.role = "worker"` in additional host configs.
 
 ## Key Simplifications
 
-- ✅ **No resource limits** - Kubernetes defaults work fine
-- ✅ **No complex security contexts** - Learning-appropriate security
-- ✅ **No verbose configurations** - Helm charts handle details
-- ✅ **No hard dependencies** - Services self-heal via Kubernetes
-- ✅ **Minimal ConfigMaps** - Only essential configuration
+- ✅ **Flux auto-bootstrap** - Automated via `flux bootstrap github` in systemd
+- ✅ **Minimal K3s flags** - Only essential: disable built-ins, kubeconfig permissions
+- ✅ **Simple node roles** - Just control-plane/worker (no complex profiles)
+- ✅ **No redundant config** - IP pools in MetalLB CRDs, no duplicate ConfigMaps
+- ✅ **Helm defaults** - Charts handle complexity, minimal overrides
 
 ## GitOps Workflow
 
@@ -94,18 +94,19 @@ infrastructure/
 ## Troubleshooting
 
 ```bash
-# Check system status
+# Check Flux bootstrap status
+systemctl status flux-bootstrap
+journalctl -u flux-bootstrap
+
+# Check cluster status
 kubectl get nodes
 kubectl get pods -A
 
-# Check Flux status
-kubectl get gitrepositories,helmreleases -A
+# Check Flux reconciliation
+kubectl get gitrepositories,kustomizations,helmreleases -A
 
 # View service IPs
 kubectl get svc -A | grep LoadBalancer
-
-# Check logs
-kubectl logs -n flux-system -l app=source-controller
 ```
 
 ## Production Migration

@@ -35,6 +35,13 @@
         mode = "0400";  # Secure cluster join token
       };
 
+      # GitHub token for Flux bootstrap
+      "github/flux-token" = {
+        name = "github-flux-token";
+        owner = "root";
+        group = "root";
+        mode = "0400";  # Secure GitHub personal access token
+      };
 
       # Additional secrets can be added here as needed
     };

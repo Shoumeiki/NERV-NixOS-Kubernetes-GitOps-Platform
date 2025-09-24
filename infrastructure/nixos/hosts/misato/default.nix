@@ -85,20 +85,9 @@
       clusterInit = true;    # Initialize new cluster
       tokenFile = config.sops.secrets."k3s/token".path;  # Encrypted cluster token
       extraFlags = toString ([
-        "--env=TZ=Australia/Melbourne"  # Pass timezone to containers
-        "--disable=traefik"   # Use external Traefik via GitOps
-        "--disable=servicelb" # Use MetalLB via GitOps
-        "--disable=local-storage" # Use Longhorn for storage
-        # Performance optimizations for single-node cluster
-        "--kube-apiserver-arg=max-requests-inflight=400"
-        "--kube-apiserver-arg=max-mutating-requests-inflight=200" 
-        "--kube-controller-manager-arg=node-monitor-period=2s"
-        "--kube-controller-manager-arg=node-monitor-grace-period=16s"
-        "--kubelet-arg=max-pods=110"
-        "--kubelet-arg=cluster-dns=10.43.0.10"
-        # Configure timezone for containers
-        "--kube-apiserver-arg=default-not-ready-toleration-seconds=30"
-        "--kube-apiserver-arg=default-unreachable-toleration-seconds=30"
+        "--disable=traefik"
+        "--disable=servicelb"
+        "--disable=local-storage"
         "--write-kubeconfig-mode=644"
       ] ++ (lib.mapAttrsToList (key: value: "--node-label=${key}=${value}") config.nerv.nodeRole.nodeLabels));
     };
@@ -112,16 +101,13 @@
   };
 
   # GitOps configuration with Flux CD
-  nerv = {
-    flux = {
-      enable = true;
-      repository = {
-        url = config.nerv.network.repository.url;  # GitHub repository URL
-        branch = "main";
-        path = "infrastructure/kubernetes";         # Kubernetes manifests path
-      };
-      namespace = "flux-system";                   # Flux installation namespace
-      interval = "1m";                            # Git polling interval
+  nerv.flux = {
+    enable = true;
+    github = {
+      owner = "Shoumeiki";
+      repository = "NERV-NixOS-Kubernetes-GitOps-Platform";
+      branch = "main";
+      path = "infrastructure/kubernetes";
     };
   };
 

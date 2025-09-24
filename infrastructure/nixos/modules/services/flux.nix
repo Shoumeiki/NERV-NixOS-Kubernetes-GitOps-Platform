@@ -1,6 +1,6 @@
 # File: infrastructure/nixos/modules/services/flux.nix
-# Description: Flux v2 GitOps controller configuration
-# Learning Focus: Declarative GitOps with Kubernetes CRDs
+# Description: Automated Flux v2 bootstrap via flux CLI
+# Learning Focus: Flux bootstrap automation with GitHub integration
 
 { config, lib, pkgs, ... }:
 
@@ -18,10 +18,15 @@ in
       description = "Enable Flux v2 GitOps controllers";
     };
 
-    repository = {
-      url = mkOption {
+    github = {
+      owner = mkOption {
         type = types.str;
-        description = "Git repository URL for GitOps";
+        description = "GitHub repository owner/organization";
+      };
+
+      repository = mkOption {
+        type = types.str;
+        description = "GitHub repository name";
       };
 
       branch = mkOption {
@@ -33,14 +38,14 @@ in
       path = mkOption {
         type = types.str;
         default = "infrastructure/kubernetes";
-        description = "Path within repository";
+        description = "Path within repository for Kubernetes manifests";
       };
     };
 
     namespace = mkOption {
       type = types.str;
       default = "flux-system";
-      description = "Flux namespace";
+      description = "Flux installation namespace";
     };
 
     interval = mkOption {
@@ -48,106 +53,64 @@ in
       default = "1m";
       description = "Reconciliation interval";
     };
-
   };
 
   config = mkIf cfg.enable {
-    services.k3s.manifests = {
-      flux-namespace = {
-        content = {
-          apiVersion = "v1";
-          kind = "Namespace";
-          metadata = {
-            name = cfg.namespace;
-            labels = {
-              "app.kubernetes.io/name" = "flux-system";
-              "app.kubernetes.io/component" = "gitops";
-              "app.kubernetes.io/part-of" = "flux";
-              # Flux controllers can run with restricted security
-              "pod-security.kubernetes.io/enforce" = "restricted";
-              "pod-security.kubernetes.io/audit" = "restricted";
-              "pod-security.kubernetes.io/warn" = "restricted";
-            };
-          };
-        };
-      };
+    environment.systemPackages = [ pkgs.fluxcd ];
 
-      flux-system-install = {
-        source = pkgs.fetchurl {
-          url = "https://github.com/fluxcd/flux2/releases/download/v2.6.1/install.yaml";
-          sha256 = "sha256-1e9lSJ+aaDcq1iadq3nW7+m4opHz+j6rlcu1V10wP/Y=";
-        };
-      };
-
-      flux-git-repository = {
-        content = {
-          apiVersion = "source.toolkit.fluxcd.io/v1";
-          kind = "GitRepository";
-          metadata = {
-            name = "nerv-platform";
-            namespace = cfg.namespace;
-          };
-          spec = {
-            interval = cfg.interval;
-            url = cfg.repository.url;
-            ref.branch = cfg.repository.branch;
-            # Performance optimization for large repositories
-            gitImplementation = "go-git";
-            # Reduce clone depth for faster syncs
-            gitSpec = {
-              depth = 1;
-            };
-          };
-        };
-      };
-
-      flux-kustomization = {
-        content = {
-          apiVersion = "kustomize.toolkit.fluxcd.io/v1";
-          kind = "Kustomization";
-          metadata = {
-            name = "nerv-infrastructure";
-            namespace = cfg.namespace;
-          };
-          spec = {
-            interval = cfg.interval;
-            sourceRef = {
-              kind = "GitRepository";
-              name = "nerv-platform";
-            };
-            path = cfg.repository.path;
-            prune = true;
-          };
-        };
-      };
-    };
-
-    # Simple health check service - Flux bootstrap handled via manifests
-    systemd.services.flux-ready = {
-      description = "Wait for Flux GitOps readiness";
+    systemd.services.flux-bootstrap = {
+      description = "Bootstrap Flux v2 GitOps";
       wantedBy = [ "multi-user.target" ];
-      after = [ "k3s.service" ];
-      wants = [ "k3s.service" ];
+      after = [ "k3s.service" "network-online.target" ];
+      wants = [ "k3s.service" "network-online.target" ];
 
       serviceConfig = {
         Type = "oneshot";
         RemainAfterExit = true;
-        ExecStart = "${pkgs.writeShellScript "flux-ready" ''
-          set -euo pipefail
-          
-          echo "Waiting for Kubernetes API..."
-          timeout=60
-          while ! ${pkgs.kubectl}/bin/kubectl get nodes >/dev/null 2>&1 && [[ $timeout -gt 0 ]]; do
-            sleep 2
-            ((timeout--))
-          done
-          
-          [[ $timeout -gt 0 ]] || { echo "Kubernetes API timeout"; exit 1; }
-          echo "Kubernetes API ready - Flux will bootstrap via manifests"
-        ''}";
-        User = "nobody";
-        Group = "nogroup";
+        Environment = [
+          "KUBECONFIG=/etc/rancher/k3s/k3s.yaml"
+        ];
       };
+
+      script = ''
+        set -euo pipefail
+
+        echo "Waiting for Kubernetes API..."
+        timeout=60
+        while ! ${pkgs.kubectl}/bin/kubectl get nodes >/dev/null 2>&1 && [[ $timeout -gt 0 ]]; do
+          sleep 2
+          ((timeout--))
+        done
+
+        if [[ $timeout -eq 0 ]]; then
+          echo "ERROR: Kubernetes API timeout"
+          exit 1
+        fi
+
+        echo "Kubernetes API ready"
+
+        # Check if Flux is already bootstrapped
+        if ${pkgs.kubectl}/bin/kubectl get namespace ${cfg.namespace} >/dev/null 2>&1; then
+          echo "Flux namespace already exists, checking deployment..."
+          if ${pkgs.kubectl}/bin/kubectl get deployment -n ${cfg.namespace} source-controller >/dev/null 2>&1; then
+            echo "Flux already bootstrapped, skipping"
+            exit 0
+          fi
+        fi
+
+        echo "Bootstrapping Flux v2..."
+        export GITHUB_TOKEN=$(cat ${config.sops.secrets."github/flux-token".path})
+
+        ${pkgs.fluxcd}/bin/flux bootstrap github \
+          --owner=${cfg.github.owner} \
+          --repository=${cfg.github.repository} \
+          --branch=${cfg.github.branch} \
+          --path=${cfg.github.path} \
+          --personal \
+          --interval=${cfg.interval}
+
+        echo "Flux bootstrap complete"
+      '';
     };
   };
 }

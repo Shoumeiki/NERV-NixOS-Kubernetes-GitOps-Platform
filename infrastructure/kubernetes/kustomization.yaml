@@ -5,17 +5,11 @@ kind: Kustomization
 
 resources:
   - namespaces.yaml
-  - config/platform-config.yaml
   - sources/helm-repositories.yaml
-  
-  # Infrastructure services (parallel deployment - dependencies handled via health checks)
   - releases/metallb/helmrelease.yaml
   - releases/cert-manager/helmrelease.yaml
   - releases/traefik/helmrelease.yaml
   - releases/longhorn/helmrelease.yaml
-  
-  # Monitoring and health checks
-  - flux-health-checks.yaml
 
 commonLabels:
   app.kubernetes.io/managed-by: flux
