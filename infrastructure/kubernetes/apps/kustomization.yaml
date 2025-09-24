@@ -5,7 +5,6 @@ resources:
   - namespaces.yaml
   - sources/helm-repositories.yaml
   - releases/metallb/helmrelease.yaml
-  - releases/metallb/config.yaml
   - releases/cert-manager/helmrelease.yaml
   - releases/traefik/helmrelease.yaml
   - releases/longhorn/helmrelease.yaml
