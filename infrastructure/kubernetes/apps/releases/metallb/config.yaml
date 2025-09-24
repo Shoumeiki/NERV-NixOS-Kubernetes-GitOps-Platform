@@ -10,6 +10,8 @@ metadata:
     app.kubernetes.io/name: nerv-ip-pool
     app.kubernetes.io/component: network
     app.kubernetes.io/part-of: nerv-platform
+  annotations:
+    kustomize.toolkit.fluxcd.io/depends-on: metallb-system/metallb
 spec:
   addresses:
     - 192.168.1.111-192.168.1.150
@@ -24,6 +26,8 @@ metadata:
     app.kubernetes.io/name: nerv-l2-advertisement
     app.kubernetes.io/component: network
     app.kubernetes.io/part-of: nerv-platform
+  annotations:
+    kustomize.toolkit.fluxcd.io/depends-on: metallb-system/metallb
 spec:
   ipAddressPools:
     - nerv-pool
