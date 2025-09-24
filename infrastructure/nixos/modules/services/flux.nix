@@ -37,8 +37,8 @@ in
 
       path = mkOption {
         type = types.str;
-        default = "infrastructure/kubernetes/flux-system";
-        description = "Path within repository for Flux system manifests";
+        default = "infrastructure/kubernetes";
+        description = "Path within repository containing flux-system directory";
       };
     };
 
