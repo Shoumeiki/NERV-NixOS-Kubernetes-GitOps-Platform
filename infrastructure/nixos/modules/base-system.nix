@@ -23,18 +23,15 @@
       allowPing = true;
       # SSH access
       allowedTCPPorts = [ 22 ];
-      # K3s cluster communication
+      # K3s cluster communication + MetalLB L2 mode
       allowedTCPPortRanges = [
-        { from = 6443; to = 6443; }  # K3s API server
+        { from = 6443; to = 6443; }   # K3s API server
         { from = 10250; to = 10250; } # Kubelet API
         { from = 2379; to = 2380; }   # etcd client/peer
+        { from = 7946; to = 7946; }   # MetalLB memberlist
       ];
-      # K3s flannel VXLAN
+      # K3s flannel VXLAN + MetalLB L2 mode
       allowedUDPPorts = [ 8472 ];
-      # MetalLB L2 mode
-      allowedTCPPortRanges = [
-        { from = 7946; to = 7946; }  # MetalLB memberlist
-      ];
       allowedUDPPortRanges = [
         { from = 7946; to = 7946; }  # MetalLB memberlist
       ];
