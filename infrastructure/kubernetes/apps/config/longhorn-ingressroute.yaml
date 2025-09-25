@@ -1,0 +1,25 @@
+# Longhorn UI IngressRoute with automated TLS
+
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: longhorn-ui
+  namespace: longhorn-system
+  labels:
+    app.kubernetes.io/name: longhorn-ui
+    app.kubernetes.io/component: storage-ui
+    app.kubernetes.io/part-of: nerv-platform
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`longhorn.nerv.local`)
+      kind: Rule
+      services:
+        - name: longhorn-frontend
+          port: 80
+          namespace: longhorn-system
+  tls:
+    # cert-manager will automatically create certificates for this domain
+    secretName: longhorn-ui-tls

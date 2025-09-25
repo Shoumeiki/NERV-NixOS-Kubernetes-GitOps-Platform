@@ -33,6 +33,7 @@ kubectl get svc -A  # Find LoadBalancer IPs
 | **Traefik** | v37.1.1 | Ingress @ 192.168.1.111 | ✅ Running |
 | **cert-manager** | v1.18.2 | TLS certificates | ✅ Ready |
 | **Longhorn** | v1.9.1 | Persistent storage | ✅ Running |
+| **Weave GitOps** | v4.0.36 | Flux dashboard | ✅ Ready |
 
 ## Architecture
 
@@ -123,8 +124,10 @@ kubectl get svc -n traefik-system
 
 **Access Services:**
 ```bash
-# Add to /etc/hosts: 192.168.1.111 traefik.nerv.local
-https://traefik.nerv.local  # Traefik dashboard
+# Add to /etc/hosts: 192.168.1.111 <domain>
+https://traefik.nerv.local     # Traefik ingress dashboard
+https://longhorn.nerv.local    # Storage management UI
+https://flux.nerv.local        # GitOps dashboard (admin/admin123)
 ```
 
 **Troubleshooting:**

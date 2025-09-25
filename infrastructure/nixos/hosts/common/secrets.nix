@@ -43,7 +43,6 @@
         mode = "0400";  # Secure GitHub personal access token
       };
 
-      # Additional secrets can be added here as needed
     };
   };
 }

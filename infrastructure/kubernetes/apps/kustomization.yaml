@@ -8,3 +8,4 @@ resources:
   - releases/cert-manager/helmrelease.yaml
   - releases/traefik/helmrelease.yaml
   - releases/longhorn/helmrelease.yaml
+  - releases/weave-gitops/helmrelease.yaml
