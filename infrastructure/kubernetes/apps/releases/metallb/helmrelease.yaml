@@ -33,4 +33,20 @@ spec:
       remediateLastFailure: true
   rollback:
     cleanupOnFail: true
-  values: {}
+  values:
+    controller:
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 200m
+          memory: 256Mi
+    speaker:
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 200m
+          memory: 256Mi

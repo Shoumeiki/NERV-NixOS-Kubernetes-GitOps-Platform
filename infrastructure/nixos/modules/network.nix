@@ -33,44 +33,7 @@ in
       };
     };
 
-    services = {
-      dns = mkOption {
-        type = types.str;
-        default = "192.168.1.111";
-        description = "Static IP for DNS service LoadBalancer";
-      };
-
-      traefik = mkOption {
-        type = types.str;
-        default = "192.168.1.112";
-        description = "Static IP for Traefik ingress controller LoadBalancer";
-      };
-
-      longhorn = mkOption {
-        type = types.str;
-        default = "192.168.1.113";
-        description = "Static IP for Longhorn storage management UI LoadBalancer";
-      };
-
-      monitoring = mkOption {
-        type = types.str;
-        default = "192.168.1.114";
-        description = "Static IP for monitoring services LoadBalancer";
-      };
-    };
-
-    repository = {
-      url = mkOption {
-        type = types.str;
-        default = "https://github.com/Shoumeiki/NERV-NixOS-Kubernetes-GitOps-Platform.git";
-        description = "Git repository URL for GitOps deployment";
-      };
-
-      branch = mkOption {
-        type = types.str;
-        default = "main";
-        description = "Git branch for GitOps deployment";
-      };
-    };
+    # Reserved for future service static IP assignments if needed
+    # Currently using dynamic MetalLB allocation for simplicity
   };
 }

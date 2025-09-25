@@ -12,9 +12,7 @@
     hostName = "misato";
     useDHCP = lib.mkDefault true;
     wireless.enable = false;
-    # Use reliable public DNS as fallback, allow resolvconf for K8s DNS
-    nameservers = [ "1.1.1.1" "8.8.8.8" ];
-    # resolvconf must be enabled for proper Kubernetes cluster DNS resolution
+    # DNS handled by base-system.nix for consistency
   };
 
   # Configure node role for Kubernetes cluster management

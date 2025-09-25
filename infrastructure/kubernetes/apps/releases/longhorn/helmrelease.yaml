@@ -37,25 +37,11 @@ spec:
     cleanupOnFail: true
   values:
     defaultSettings:
+      # Essential single-node configuration
       defaultReplicaCount: 1
-      
-      # Single-node optimizations
       allowVolumeCreationWithDegradedAvailability: true
-      disableSchedulingOnCordonedNode: false
       replicaSoftAntiAffinity: false
-      storageReservedPercentageForDefaultDisk: 10
       
-      defaultDataPath: "/var/lib/longhorn"
-      storageOverProvisioningPercentage: 100
-      storageMinimalAvailablePercentage: 25
-      backupTarget: ""  # Configure S3/NFS backup target if needed
-      backupTargetCredentialSecret: ""
-      autoCleanupSystemGeneratedSnapshot: true
-      autoDeletePodWhenVolumeDetachedUnexpectedly: true
-      nodeDownPodDeletionPolicy: "delete-both-statefulset-and-deployment-pod"
-      replicaReplenishmentWaitInterval: 600
-      offlineReplicaRebuilding: true
-
     ingress:
       enabled: true
       host: longhorn.nerv.local
@@ -63,3 +49,21 @@ spec:
     persistence:
       defaultClass: true
       defaultClassReplicaCount: 1
+
+    longhornManager:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 300m
+          memory: 512Mi
+
+    longhornDriver:
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 200m
+          memory: 256Mi
