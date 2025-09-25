@@ -32,6 +32,13 @@ with lib;
         PermitRootLogin = "no";          # Disable root login
         X11Forwarding = false;           # Disable X11 forwarding
         AllowUsers = [ config.nerv.users.adminUser ];  # Restrict to admin user only
+        MaxAuthTries = 3;                # Limit authentication attempts
+        ClientAliveInterval = 300;       # Send keepalive every 5 minutes
+        ClientAliveCountMax = 2;         # Disconnect after 2 failed keepalives
+        Protocol = "2";                  # Force SSH protocol version 2
+        PermitEmptyPasswords = false;    # Explicitly disable empty passwords
+        PubkeyAuthentication = true;     # Explicitly enable pubkey auth
+        AuthenticationMethods = "publickey";  # Only allow pubkey authentication
       };
       ports = [ 22 ];
     };
