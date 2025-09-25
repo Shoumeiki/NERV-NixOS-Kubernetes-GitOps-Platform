@@ -1,0 +1,45 @@
+# Best Practice: Expose Flux source-controller built-in web interface
+# Industry standard approach for Flux monitoring and troubleshooting
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flux-status
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: flux-status
+    app.kubernetes.io/component: gitops-monitoring
+    app.kubernetes.io/part-of: nerv-platform
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 9090
+    targetPort: 9090
+    protocol: TCP
+  selector:
+    app: source-controller
+
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: flux-status
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: flux-status
+    app.kubernetes.io/component: gitops-monitoring
+    app.kubernetes.io/part-of: nerv-platform
+spec:
+  entryPoints:
+  - websecure
+  routes:
+  - match: Host(`flux.nerv.local`)
+    kind: Rule
+    services:
+    - name: flux-status
+      port: 9090
+      namespace: flux-system
+  tls:
+    secretName: flux-status-tls

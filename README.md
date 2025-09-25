@@ -33,7 +33,6 @@ kubectl get svc -A  # Find LoadBalancer IPs
 | **Traefik** | v37.1.1 | Ingress @ 192.168.1.111 | ✅ Running |
 | **cert-manager** | v1.18.2 | TLS certificates | ✅ Ready |
 | **Longhorn** | v1.9.1 | Persistent storage | ✅ Running |
-| **Weave GitOps** | v4.0.36 | Flux dashboard | ✅ Ready |
 
 ## Architecture
 
@@ -125,9 +124,23 @@ kubectl get svc -n traefik-system
 **Access Services:**
 ```bash
 # Add to /etc/hosts: 192.168.1.111 <domain>
-https://traefik.nerv.local     # Traefik ingress dashboard
+https://traefik.nerv.local     # Traefik ingress dashboard  
 https://longhorn.nerv.local    # Storage management UI
-https://flux.nerv.local        # GitOps dashboard (admin/admin123)
+https://flux.nerv.local        # Flux source-controller status
+```
+
+**GitOps Monitoring (Best Practice):**
+```bash
+# Professional Flux monitoring commands
+flux get all -A                    # Complete platform status
+flux get sources -A                # Git repositories and Helm charts
+flux get kustomizations -A         # Kustomization reconciliation status  
+flux get helmreleases -A           # HelmRelease deployment status
+
+# Troubleshooting commands
+flux logs --follow --all-namespaces
+kubectl get kustomizations -n flux-system
+kubectl describe kustomization apps -n flux-system
 ```
 
 **Troubleshooting:**

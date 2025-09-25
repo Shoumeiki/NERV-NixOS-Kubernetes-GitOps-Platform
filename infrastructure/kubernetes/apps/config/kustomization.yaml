@@ -4,5 +4,4 @@ kind: Kustomization
 resources:
   - metallb-config.yaml
   - longhorn-ingressroute.yaml
-  - flux-dashboard.yaml
-  - flux-dashboard-ingressroute.yaml
+  - flux-status-service.yaml
