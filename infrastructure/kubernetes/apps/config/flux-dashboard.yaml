@@ -1,4 +1,4 @@
-# Simple Flux Dashboard using nginx with kubectl proxy
+# Simple Flux Dashboard using nginx
 
 ---
 apiVersion: apps/v1
@@ -45,10 +45,10 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-    - name: http
-      port: 80
-      targetPort: 80
-      protocol: TCP
+  - name: http
+    port: 80
+    targetPort: 80
+    protocol: TCP
   selector:
     app: flux-dashboard
 
