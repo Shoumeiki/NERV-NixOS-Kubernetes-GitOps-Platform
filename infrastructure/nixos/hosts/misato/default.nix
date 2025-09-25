@@ -92,10 +92,8 @@
         "--kube-apiserver-arg=audit-log-maxbackup=3"
         "--kube-apiserver-arg=audit-log-maxsize=100"
         "--kube-apiserver-arg=audit-log-path=/var/lib/rancher/k3s/server/logs/audit.log"
-        "--kube-apiserver-arg=enable-admission-plugins=NodeRestriction,PodSecurityPolicy"
+        "--kube-apiserver-arg=enable-admission-plugins=NodeRestriction"
         "--kube-apiserver-arg=anonymous-auth=false"
-        "--kubelet-arg=anonymous-auth=false"
-        "--kubelet-arg=authorization-mode=Webhook"
       ] ++ (lib.mapAttrsToList (key: value: "--node-label=${key}=${value}") config.nerv.nodeRole.nodeLabels));
     };
 
