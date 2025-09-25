@@ -17,8 +17,8 @@ spec:
     - match: Host(`flux.nerv.local`)
       kind: Rule
       services:
-        - name: weave-gitops
-          port: 9001
+        - name: flux-dashboard
+          port: 80
           namespace: flux-system
   tls:
     # cert-manager will automatically create certificates for this domain
